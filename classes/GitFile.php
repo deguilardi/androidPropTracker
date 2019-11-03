@@ -4,19 +4,19 @@ include "entities/CommitEntity.php";
 
 class GitFile extends CacheableFile{
 
-    private $repo;
-    private $path;
+    protected $repo;
+    protected $path;
     protected $commits = array();
 
-    public function __construct( $repository, $path ){
-        $this->repo = $repository->repo;
+    public function __construct( $repo, $branch, $path ){
+        $this->repo = $repo;
         $this->path = $path;
-        parent::__construct( GIT_RAW_CODE_URL_BASE . $repository->repo . "/" . GIT_BRANCH_DEFAULT . "/" . $path );
-        $this->loadCommits();
+        $this->branch = $branch;
+        parent::__construct( GIT_RAW_CODE_URL_BASE . $repo . "/" . $this->branch . "/" . $path );
     }
 
-    private function loadCommits(){
-        $url = GIT_URL_BASE . $this->repo . "/commits/" . GIT_BRANCH_DEFAULT . "/" . $this->path;
+    protected function loadCommits(){
+        $url = GIT_URL_BASE . $this->repo . "/commits/" . $this->branch . "/" . $this->path;
         $this->loadCommitsFromPage( $url );
     }
 

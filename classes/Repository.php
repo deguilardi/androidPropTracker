@@ -9,9 +9,7 @@ class Repository{
 
     public function __construct( $repo ){
         $this->repo = $repo;
-        $this->rootGradle = new GradleFile( $this, "build.gradle", null );
-        // $this->moduleGradle = new GradleFile( $repo . "/" . GIT_BRANCH_DEFAULT . "/android/build.gradle", $this->rootGradle );
-
-
+        $this->rootGradle = GradleFile::factoryMaster( $this->repo, GIT_BRANCH_DEFAULT, "build.gradle", null );
+        $this->moduleGradle = GradleFile::factoryMaster( $this->repo, GIT_BRANCH_DEFAULT, "/android/build.gradle", $this->rootGradle );
     }
 }
