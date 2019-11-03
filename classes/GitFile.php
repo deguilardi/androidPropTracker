@@ -16,8 +16,10 @@ class GitFile extends CacheableFile{
     }
 
     protected function loadCommits(){
-        $url = GIT_URL_BASE . $this->repo . "/commits/" . $this->branch . "/" . $this->path;
-        $this->loadCommitsFromPage( $url );
+        if( $this->loaded ){
+            $url = GIT_URL_BASE . $this->repo . "/commits/" . $this->branch . "/" . $this->path;
+            $this->loadCommitsFromPage( $url );
+        }
     }
 
     private function loadCommitsFromPage( $url ){

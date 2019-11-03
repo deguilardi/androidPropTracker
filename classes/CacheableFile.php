@@ -7,6 +7,7 @@ class CacheableFile{
     protected $remoteFile;
     public $localFile;
     public $content;
+    public $loaded = false;
     // @TODO check timestamp to reload
     // public $updateTimestamp; 
 
@@ -29,7 +30,8 @@ class CacheableFile{
     protected function loadLocal(){
         if( is_file( $this->localFile ) ){
             $this->content = file_get_contents( $this->localFile );
-            return $this->content ? true : false;
+            $this->loaded = $this->content ? true : false;
+            return $this->loaded;
         }
         else{
             return false;
@@ -46,8 +48,11 @@ class CacheableFile{
     }
 
     private function loadRemote(){
-        $this->content = file_get_contents( $this->remoteFile );
-        $this->saveLocal();
+        $this->content = @file_get_contents( $this->remoteFile );
+        if( $this->content ){
+            $this->loaded = true;
+            $this->saveLocal();
+        }
     }
 
     private function initCacheDir(){

@@ -28,7 +28,7 @@ class GradleFile extends GitFile{
         // $gradleFile->extractPropertyChangeHistory( $gradleFile, "minSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         $gradleFile->extractPropertyChangeHistory( $gradleFile, "targetSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         // $gradleFile->extractPropertyChangeHistory( $gradleFile, "compileSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
-        echo "<pre>"; print_r( $gradleFile->histories );
+        // echo "<pre>"; print_r( $gradleFile->histories );
         return $gradleFile;
     }
 
@@ -114,6 +114,8 @@ class GradleFile extends GitFile{
     }
 
     private function extractPropertyChangeHistory( $baseGradleFile, $property, $leftIndex, $rightIndex, $lastGradleFile ){
+        if( !$this->loaded ){ return; }
+
         $middleIndex = $leftIndex + floor( ( $rightIndex - $leftIndex ) / 2 );
         if( $middleIndex == sizeof( $this->commits ) - 2 ){
             return;
