@@ -1,6 +1,7 @@
 <?php
 include "GitFile.php";
 include "entities/PropertyHistoryEntity.php";
+include "entities/RepositoryEntity.php";
 
 class GradleFile extends GitFile{
 
@@ -9,27 +10,27 @@ class GradleFile extends GitFile{
     public $propertyValue = GradleFile::NOT_LOADED;
     public $propertyHistory = array();
 
-    private function __construct( $repo, $branch, $file, $parent ){
-        parent::__construct( $repo, $branch, $file );
+    private function __construct( $repoEntity, $file, $parent ){
+        parent::__construct( $repoEntity, $file );
         $this->parent = $parent;
         $this->load();
         $this->initialParse( $this->content );
         $this->clear();
     }
 
-    public function factoryMaster( $repo, $branch, $file, $parent ){
-        $gradleFile = new GradleFile( $repo, $branch, $file, $parent );
+    public function factoryMaster( $repoEntity, $file, $parent ){
+        $gradleFile = new GradleFile( $repoEntity, $file, $parent );
         $gradleFile->loadCommits();
         $gradleFile->extractPropertyChangeHistory( $gradleFile, 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         return $gradleFile;
     }
 
-    public function factoryWithCommit( $repo, $branch, $file, $hasParent ){
+    public function factoryWithCommit( $repoEntity, $file, $hasParent ){
         $parent = null;
         if( $hasParent ){
-            $parent = GradleFile::factoryWithCommit( $repo, $branch, $this->parent->path, false );
+            $parent = GradleFile::factoryWithCommit( $repoEntity, $this->parent->path, false );
         }
-        $gradleFile = new GradleFile( $repo, $branch, $file, $parent );
+        $gradleFile = new GradleFile( $repoEntity, $file, $parent );
         return $gradleFile;
     }
 
@@ -95,7 +96,8 @@ class GradleFile extends GitFile{
         // echo "<pre>" . $leftIndex . " - " . $middleIndex . " - " . $rightIndex . " -- ";
         $commit = $this->commits[ $middleIndex ];
         $hash = $commit->hash;
-        $gradleFile = GradleFile::factoryWithCommit( $baseGradleFile->repo, $hash, $this->path, $this->parent ? true : false );
+        $repoEntity = new RepositoryEntity( $baseGradleFile->repoEntity->repo, $hash );
+        $gradleFile = GradleFile::factoryWithCommit( $repoEntity, $this->path, $this->parent ? true : false );
 
         if( $rightIndex <= $leftIndex || $middleIndex == $leftIndex ){
             $oldValue = $lastGradleFile->propertyValue;

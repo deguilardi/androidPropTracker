@@ -48,6 +48,9 @@ class CacheableFile{
     }
 
     private function loadRemote(){
+        echo "<br>" . "loadRemote";
+        echo "<br>" . $this->remoteFile;
+        echo "<br>" . $this->localFile;
         $this->content = @file_get_contents( $this->remoteFile );
         if( $this->content ){
             $this->loaded = true;

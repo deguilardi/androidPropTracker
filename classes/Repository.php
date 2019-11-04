@@ -3,25 +3,20 @@ include "GradleFile.php";
 include "config.inc";
 
 class Repository{
-    public $repo;
+    public $repoEntity;
     public $rootGradle;
     public $modulesGradle;
     public $targetSdkVersionChanges = array();
 
     public function __construct( $repo ){
-        $this->repo = $repo;
-        $this->rootGradle = GradleFile::factoryMaster( $this->repo, GIT_BRANCH_DEFAULT, "build.gradle", null );
-
-
+        $this->repoEntity = new RepositoryEntity( $repo, GIT_BRANCH_DEFAULT );
+        $this->rootGradle = GradleFile::factoryMaster( $this->repoEntity, "build.gradle", null );
 
         $moduleNames = $this->loadModuleNames();
-        // print_r( $moduleNames );
         foreach( $moduleNames as $moduleName ){
-            $this->modulesGradle[] = GradleFile::factoryMaster( $this->repo, GIT_BRANCH_DEFAULT, $moduleName . "/build.gradle", $this->rootGradle );
+            $this->modulesGradle[] = GradleFile::factoryMaster( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
         }
 
-
-        echo "<pre>";
         foreach( $this->modulesGradle as $moduleGradle ){
             if( $moduleGradle->propertyHistory ){
                 foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
@@ -33,15 +28,15 @@ class Repository{
             }
         }
         ksort( $this->targetSdkVersionChanges );
-        print_r( $this->targetSdkVersionChanges );
 
+        echo "<pre>";
+        print_r( $this->targetSdkVersionChanges );
     }
 
     private function loadModuleNames(){
-        echo "<pre>";
-
+        
         // load file
-        $settingsFile = new GitFile( $this->repo, GIT_BRANCH_DEFAULT, "settings.gradle" );
+        $settingsFile = new GitFile( $this->repoEntity, "settings.gradle" );
         $settingsFile->load();
 
         // apply some filters
