@@ -8,9 +8,9 @@ echo "<pre>";
 // $repo = new Repository( "/facebook/flipper" );
 // $repo = new Repository( "/facebook/yoga" );
 // $repo = new Repository( "/android/uamp" );
-$repo = new Repository( "/android/plaid" );
+// $repo = new Repository( "/android/architecture-samples" );
 
-// works with no result - proj with folder
+// works with no result - proj in folder
 // $repo = new Repository( "/android/storage-samples", "ActionOpenDocument" );
 // $repo = new Repository( "/android/app-bundle-samples", "DynamicCodeLoadingKotlin" );
 // $repo = new Repository( "/android/user-interface-samples", "AdvancedImmersiveMode" );
@@ -20,5 +20,7 @@ $repo = new Repository( "/android/plaid" );
 // @TODO external config file
 // $repo = new Repository( "/facebook/facebook-android-sdk" );
 // $repo = new Repository( "/facebook/screenshot-tests-for-android" );
+// $repo = new Repository( "/android/plaid" );
 
-
+// @TODO ext pattern
+$repo = new Repository( "/android/topeka" );
