@@ -62,7 +62,7 @@ class Repository{
 
         // match modules with their spscific paths (if specified)
         $matches = array();
-        $pattern = "/(project\(\')([a-zA-Z0-9\:\-\,]{1,})(\'\)\.projectDir\=)(file\(\')([a-zA-Z0-9\/\.\_\-]{1,})(\'\))/";
+        $pattern = "/(project\(\')([a-zA-Z0-9\:\-\,]{1,})(\'\)\.projectDir\=)([new]{0,}[fF]{1,}ile\([rootDir,]{0,}\')([a-zA-Z0-9\/\.\_\-]{1,})(\'\))/";
         preg_match_all( $pattern, $content, $matches );
         $matchesModules = $matches[ 2 ];
         $matchesPaths = $matches[ 5 ];
