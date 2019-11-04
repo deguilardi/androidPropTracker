@@ -1,6 +1,7 @@
 <?php
 include "CacheableFile.php";
 include "entities/CommitEntity.php";
+include "entities/RepositoryEntity.php";
 
 class GitFile extends CacheableFile{
 
@@ -16,7 +17,7 @@ class GitFile extends CacheableFile{
 
     protected function loadCommits(){
         if( $this->loaded ){
-            $this->loadCommitsFromPage( $this->repoEntity->getCommitsListUrlFirFile( $this->path ) );
+            $this->loadCommitsFromPage( $this->repoEntity->getCommitsListUrlForFile( $this->path ) );
         }
     }
 

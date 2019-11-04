@@ -8,8 +8,8 @@ class Repository{
     public $modulesGradle;
     public $targetSdkVersionChanges = array();
 
-    public function __construct( $repo ){
-        $this->repoEntity = new RepositoryEntity( $repo, GIT_BRANCH_DEFAULT );
+    public function __construct( $repo, $folder = "" ){
+        $this->repoEntity = new RepositoryEntity( $repo, GIT_BRANCH_DEFAULT, $folder );
         $this->rootGradle = GradleFile::factoryMaster( $this->repoEntity, "build.gradle", null );
 
         $moduleNames = $this->loadModuleNames();
@@ -31,10 +31,11 @@ class Repository{
 
         echo "<pre>";
         print_r( $this->targetSdkVersionChanges );
+        // print_r( $this->rootGradle );
     }
 
     private function loadModuleNames(){
-        
+
         // load file
         $settingsFile = new GitFile( $this->repoEntity, "settings.gradle" );
         $settingsFile->load();

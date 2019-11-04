@@ -1,7 +1,6 @@
 <?php
 include "GitFile.php";
 include "entities/PropertyHistoryEntity.php";
-include "entities/RepositoryEntity.php";
 
 class GradleFile extends GitFile{
 
@@ -86,17 +85,16 @@ class GradleFile extends GitFile{
     }
 
     private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $lastGradleFile ){
-        if( !$this->loaded ){ return; }
         $property = PARAM_TO_EXTRACT;
+        if( !$this->loaded || sizeof( $this->commits ) <= 1 ){ return; }
         $middleIndex = $leftIndex + floor( ( $rightIndex - $leftIndex ) / 2 );
-        if( $middleIndex == sizeof( $this->commits ) - 2 ){
-            return;
-        }
+        if( $middleIndex == sizeof( $this->commits ) - 2 ){ return; }
 
         // echo "<pre>" . $leftIndex . " - " . $middleIndex . " - " . $rightIndex . " -- ";
         $commit = $this->commits[ $middleIndex ];
         $hash = $commit->hash;
-        $repoEntity = new RepositoryEntity( $baseGradleFile->repoEntity->repo, $hash );
+        $repoEntity = clone( $baseGradleFile->repoEntity );
+        $repoEntity->branch = $hash;
         $gradleFile = GradleFile::factoryWithCommit( $repoEntity, $this->path, $this->parent ? true : false );
 
         if( $rightIndex <= $leftIndex || $middleIndex == $leftIndex ){
