@@ -5,13 +5,8 @@ include "entities/PropertyHistoryEntity.php";
 class GradleFile extends GitFile{
 
     private const NOT_LOADED = -1;
-
     private $parent;
-
-    public $minSdkVersion = GradleFile::NOT_LOADED;
-    public $targetSdkVersion = GradleFile::NOT_LOADED;
-    public $compileSdkVersion = GradleFile::NOT_LOADED;
-
+    public $propertyValue = GradleFile::NOT_LOADED;
     public $histories = array();
 
     private function __construct( $repo, $branch, $file, $parent ){
@@ -25,10 +20,7 @@ class GradleFile extends GitFile{
     public function factoryMaster( $repo, $branch, $file, $parent ){
         $gradleFile = new GradleFile( $repo, $branch, $file, $parent );
         $gradleFile->loadCommits();
-        // $gradleFile->extractPropertyChangeHistory( $gradleFile, "minSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
-        $gradleFile->extractPropertyChangeHistory( $gradleFile, "targetSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
-        // $gradleFile->extractPropertyChangeHistory( $gradleFile, "compileSdkVersion", 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
-        // echo "<pre>"; print_r( $gradleFile->histories );
+        $gradleFile->extractPropertyChangeHistory( $gradleFile, 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         return $gradleFile;
     }
 
@@ -49,34 +41,16 @@ class GradleFile extends GitFile{
         if( !$this->content ){
             return;
         }
-
-        $values = $this->parseWhole( $this->content );
-        $this->minSdkVersion = $values[ "minSdkVersion" ];
-        $this->targetSdkVersion = $values[ "targetSdkVersion" ];
-        $this->compileSdkVersion = $values[ "compileSdkVersion" ];
+        $this->propertyValue = $this->parseWhole( $this->content );
     }
 
     private function parseWhole( $content ){
         $content = str_replace( ' ', '', $content );
         $content = str_replace( '=', '', $content );
 
-        $values = $this->parseSection( "ext", $content );
-        $minSdkVersion = $values[ "minSdkVersion" ];
-        $targetSdkVersion = $values[ "targetSdkVersion" ];
-        $compileSdkVersion = $values[ "compileSdkVersion" ];
-
-        $values = $this->parseSection( "android", $content );
-        if( $values ){
-            $minSdkVersion = $values[ "minSdkVersion" ];
-            $targetSdkVersion = $values[ "targetSdkVersion" ];
-            $compileSdkVersion = $values[ "compileSdkVersion" ];
-        }
-
-        return array(
-            "minSdkVersion" => $minSdkVersion,
-            "targetSdkVersion" => $targetSdkVersion,
-            "compileSdkVersion" => $compileSdkVersion
-        );
+        $extValue = $this->parseSection( "ext", $content );
+        $androidValue = $this->parseSection( "android", $content );
+        return ( $androidValue ) ? $androidValue : $extValue;
     }
 
     private function parseSection( $section, $content ){
@@ -86,23 +60,20 @@ class GradleFile extends GitFile{
         }
 
         $sectionEndPos = strpos( $content, "}", $sectionStartPos );
-        $extContent = substr( $content, $sectionStartPos, $sectionEndPos - $sectionStartPos + 1 );
+        $sectionContent = substr( $content, $sectionStartPos, $sectionEndPos - $sectionStartPos + 1 );
 
-        return array(
-            "minSdkVersion" => $this->extractProperty( "minSdkVersion", $extContent ),
-            "targetSdkVersion" => $this->extractProperty( "targetSdkVersion", $extContent ),
-            "compileSdkVersion" => $this->extractProperty( "compileSdkVersion", $extContent )
-        );
+        return $this->extractProperty( $sectionContent );
     }
 
-    private function extractProperty( $property, $content ){
+    private function extractProperty( $content ){
+        $property = PARAM_TO_EXTRACT;
         $matches = array();
         $regexp = "/($property)([a-zA-Z0-9\.]{0,})/";
         preg_match($regexp, $content, $matches, PREG_OFFSET_CAPTURE);
         if( sizeof( $matches ) >= 3 ){
             $value = $matches[ 2 ][ 0 ];
             if( strpos( $value, "root" ) === 0 ){
-                return $this->parent->$property;
+                return $this->parent->propertyValue;
             }
             else{
                 return $value;
@@ -113,9 +84,9 @@ class GradleFile extends GitFile{
         }
     }
 
-    private function extractPropertyChangeHistory( $baseGradleFile, $property, $leftIndex, $rightIndex, $lastGradleFile ){
+    private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $lastGradleFile ){
         if( !$this->loaded ){ return; }
-
+        $property = PARAM_TO_EXTRACT;
         $middleIndex = $leftIndex + floor( ( $rightIndex - $leftIndex ) / 2 );
         if( $middleIndex == sizeof( $this->commits ) - 2 ){
             return;
@@ -127,20 +98,20 @@ class GradleFile extends GitFile{
         $gradleFile = GradleFile::factoryWithCommit( $baseGradleFile->repo, $hash, $this->path, $this->parent ? true : false );
 
         if( $rightIndex <= $leftIndex || $middleIndex == $leftIndex ){
-            $oldValue = $lastGradleFile->$property;
+            $oldValue = $lastGradleFile->propertyValue;
             if( $oldValue ){
-                $this->histories[ $property ][] = new PropertyHistoryEntity( $commit, $oldValue, $baseGradleFile->$property );
+                $this->histories[ $property ][] = new PropertyHistoryEntity( $commit, $oldValue, $baseGradleFile->propertyValue );
             }
-            $this->extractPropertyChangeHistory( $lastGradleFile, $property, $leftIndex, sizeof( $this->commits ) - 1, $lastGradleFile );
+            $this->extractPropertyChangeHistory( $lastGradleFile, $leftIndex, sizeof( $this->commits ) - 1, $lastGradleFile );
             return;
         }
 
-        if( $baseGradleFile->$property != $gradleFile->$property ){
+        if( $baseGradleFile->propertyValue != $gradleFile->propertyValue ){
             $rightIndex = $middleIndex;
         }
         else{
             $leftIndex = $middleIndex;
         }
-        $this->extractPropertyChangeHistory( $baseGradleFile, $property, $leftIndex, $rightIndex, $gradleFile );
+        $this->extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $gradleFile );
     }
 }
