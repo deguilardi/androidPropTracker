@@ -23,8 +23,8 @@ class Repository{
 
         echo "<pre>";
         foreach( $this->modulesGradle as $moduleGradle ){
-            if( $moduleGradle->histories[ "targetSdkVersion" ] ){
-                foreach( $moduleGradle->histories[ "targetSdkVersion" ] as $targetSdkVersionChange ){
+            if( $moduleGradle->propertyHistory ){
+                foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
                     $key = $targetSdkVersionChange->commit->date[ "year" ] 
                          . "-" . str_pad( $targetSdkVersionChange->commit->date[ "month" ], 2, '0', STR_PAD_LEFT ) 
                          . "-" . str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );

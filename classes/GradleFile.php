@@ -7,7 +7,7 @@ class GradleFile extends GitFile{
     private const NOT_LOADED = -1;
     private $parent;
     public $propertyValue = GradleFile::NOT_LOADED;
-    public $histories = array();
+    public $propertyHistory = array();
 
     private function __construct( $repo, $branch, $file, $parent ){
         parent::__construct( $repo, $branch, $file );
@@ -100,7 +100,7 @@ class GradleFile extends GitFile{
         if( $rightIndex <= $leftIndex || $middleIndex == $leftIndex ){
             $oldValue = $lastGradleFile->propertyValue;
             if( $oldValue ){
-                $this->histories[ $property ][] = new PropertyHistoryEntity( $commit, $oldValue, $baseGradleFile->propertyValue );
+                $this->propertyHistory[] = new PropertyHistoryEntity( $commit, $oldValue, $baseGradleFile->propertyValue );
             }
             $this->extractPropertyChangeHistory( $lastGradleFile, $leftIndex, sizeof( $this->commits ) - 1, $lastGradleFile );
             return;
