@@ -78,7 +78,7 @@ class Repository{
 
         // normalize output
         foreach( $modules as $k => $module ){
-            $modules[ $k ] = str_replace( ":", "/", $module );
+            $modules[ $k ] = substr( str_replace( ":", "/", $module ), 1 );
         }
 
         return $modules;
