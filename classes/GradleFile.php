@@ -1,6 +1,7 @@
 <?php
 include "GitFile.php";
 include "entities/PropertyHistoryEntity.php";
+include "entities/ExtVarEntity.php";
 
 class GradleFile extends GitFile{
 
@@ -8,6 +9,7 @@ class GradleFile extends GitFile{
     private $parent;
     public $propertyValue = GradleFile::NOT_LOADED;
     public $propertyHistory = array();
+    public $extVars = array();
 
     private function __construct( $repoEntity, $file, $parent ){
         parent::__construct( $repoEntity, $file );
@@ -33,24 +35,34 @@ class GradleFile extends GitFile{
         return $gradleFile;
     }
 
-    public function clear(){
-        parent::clear();
-    }
-
     private function initialParse( $content ){
         if( !$this->content ){
             return;
         }
-        $this->propertyValue = $this->parseWhole( $this->content );
+        $content = str_replace( ' ', '', $content );
+        $this->loadExtVars( $content );
+        $this->propertyValue = $this->parseSection( "android", $content );
     }
 
-    private function parseWhole( $content ){
-        $content = str_replace( ' ', '', $content );
-        $content = str_replace( '=', '', $content );
+    private function loadExtVars( $content ){
 
-        $extValue = $this->parseSection( "ext", $content );
-        $androidValue = $this->parseSection( "android", $content );
-        return ( $androidValue ) ? $androidValue : $extValue;
+        // a whole section ext{}
+        $sectionStartPos = strpos( $content, "ext{" );
+        if( $sectionStartPos ){
+            $sectionEndPos = strpos( $content, "}", $sectionStartPos );
+            $sectionContent = substr( $content, $sectionStartPos, $sectionEndPos - $sectionStartPos + 1 );
+            
+            // each var setted as var=value
+            $matches = array();
+            $regexp = "/([a-zA-Z0-9]{1,})(\=)([a-zA-Z0-9\.\_]{1,})/";
+            preg_match_all( $regexp, $sectionContent, $matches, PREG_OFFSET_CAPTURE );
+            foreach( $matches[ 1 ] as $k => $var ){
+                $varName = $var[ 0 ];
+                $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
+            }
+        }
+
+        // print_r( $this->extVars );
     }
 
     private function parseSection( $section, $content ){
@@ -67,19 +79,29 @@ class GradleFile extends GitFile{
 
     private function extractProperty( $content ){
         $property = PARAM_TO_EXTRACT;
+
+        // property is explicit
         $matches = array();
         $regexp = "/($property)([a-zA-Z0-9\.]{0,})/";
         preg_match($regexp, $content, $matches, PREG_OFFSET_CAPTURE);
         if( sizeof( $matches ) >= 3 ){
             $value = $matches[ 2 ][ 0 ];
-            if( strpos( $value, "root" ) === 0 ){
-                return $this->parent->propertyValue;
+
+            // property points to root
+            if( strpos( $value, "rootProject" ) === 0 ){
+                $varValueName = substr( $value, 12 );
+                $varValueName = str_replace( "ext.", "", $varValueName );
+                return $this->parent->extVars[ $varValueName ]->value;
             }
             else{
                 return $value;
             }
         }
         else{
+
+            // @TODO
+            // property is loaded from ext
+
             return GradleFile::NOT_LOADED;
         }
     }
