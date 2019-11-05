@@ -46,8 +46,8 @@ class GitFile extends CacheableFile{
                     if( $commitItem->nodeType != XML_ELEMENT_NODE ){ continue; }
                     if( $commitItem->tagName != "li" ){ continue; }
                     $hash = $this->extractCommitHashFromCommitsListItemTag( $commitItem );
+                    $this->commits[] = new CommitEntity( $date, $hash );
                 }
-                $this->commits[] = new CommitEntity( $date, $hash );
             }
         }
 
