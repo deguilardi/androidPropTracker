@@ -5,29 +5,34 @@ include "config.inc";
 class Repository{
     public $repoEntity;
     public $rootGradle;
-    public $modulesGradle;
-    public $propertyChanges = array();
+    public $modulesGradle = array();
+    public $propertyChanges = array( "monthly" => array(), "daily" => array() );
 
-    public function __construct( $repo, $folder = "" ){
-        $this->repoEntity = new RepositoryEntity( $repo, GIT_BRANCH_DEFAULT, $folder );
+    public function __construct( $repoEntity ){
+        $this->repoEntity = $repoEntity;
         $this->rootGradle = GradleFile::factoryMaster( $this->repoEntity, "build.gradle", null );
 
         $moduleNames = $this->loadModuleNames();
         foreach( $moduleNames as $moduleName ){
             $this->modulesGradle[] = GradleFile::factoryMaster( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
         }
+        if( sizeof( $this->modulesGradle ) == 0 ){
+            $this->modulesGradle[] = GradleFile::factoryMaster( $this->repoEntity, "app" . "/build.gradle", $this->rootGradle );
+        }
 
         foreach( $this->modulesGradle as $moduleGradle ){
             if( $moduleGradle->propertyHistory ){
                 foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
                     $key = $targetSdkVersionChange->commit->date[ "year" ] 
-                         . "-" . str_pad( $targetSdkVersionChange->commit->date[ "month" ], 2, '0', STR_PAD_LEFT ) 
-                         . "-" . str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
-                    $this->propertyChanges[ $key ][] = $targetSdkVersionChange->newValue;
+                         . "-" . str_pad( $targetSdkVersionChange->commit->date[ "month" ], 2, '0', STR_PAD_LEFT );
+                    $this->propertyChanges[ "monthly" ][ $key ][ $targetSdkVersionChange->newValue ]++;
+                    $key .= "-" . str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
+                    $this->propertyChanges[ "daily" ][ $key ][ $targetSdkVersionChange->newValue ]++;
                 }
             }
         }
-        ksort( $this->propertyChanges );
+        ksort( $this->propertyChanges[ "monthly" ] );
+        ksort( $this->propertyChanges[ "daily" ] );
     }
 
     private function loadModuleNames(){
