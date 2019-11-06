@@ -39,9 +39,25 @@ class GradleFile extends GitFile{
         if( !$this->content ){
             return;
         }
-        $content = str_replace( ' ', '', $content );
+        $content = $this->content;
+        $this->clearContent( $content );
+        $this->concatExternalFiles( $content );
         $this->loadExtVars( $content );
         $this->propertyValue = $this->parseSection( "android", $content );
+    }
+
+    private function concatExternalFiles( &$content ){
+        $matches = array();
+        $regexp = "/(applyfrom\:\')([\$]\{rootDir\}\/){0,}([a-zA-Z0-9\$\{\}\.\/\_\-]{1,})(\')/";
+        preg_match( $regexp, $content, $matches, PREG_OFFSET_CAPTURE );
+        if( sizeof( $matches ) && sizeof( $matches[ 3 ] ) > 0 ){
+            $file = $matches[ 3 ][ 0 ];
+            $gitFile = new GitFile( $this->repoEntity, $file, $this->parent );
+            $gitFile->load();
+            $newContent = $gitFile->content;
+            $this->clearContent( $newContent );
+            $content .= $newContent;
+        }
     }
 
     private function loadExtVars( $content ){
@@ -62,7 +78,34 @@ class GradleFile extends GitFile{
             }
         }
 
-        // print_r( $this->extVars );
+        // @TODO
+        // properties like ext.prop=value
+        // $sectionStartPos = strpos( $content, "ext." );
+        // if( $sectionStartPos ){
+
+        // }
+
+        // properties as array ext.prop=[...]
+        $sectionStartPos = strpos( $content, "ext." );
+        if( $sectionStartPos ){
+            $matches = array();
+            $regexp = "/(ext\.)([a-zA-Z0-9]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
+            preg_match_all( $regexp, $content, $matches );
+            $propertiesListStringList = $matches[ 4 ];
+            if( sizeof( $propertiesListStringList ) != 0 ){
+                $varPrefix = $matches[ 2 ][ 0 ];
+                foreach( $propertiesListStringList as $propertiesListString){
+                    $propertiesListString = str_replace( "'", "" , $propertiesListString );
+                    $propertiesListString = str_replace( "\n", "" , $propertiesListString );
+                    $propertiesList = explode( ",", $propertiesListString );
+                    foreach( $propertiesList as $property ){
+                        $parts = explode( ":", $property );
+                        $varName = $varPrefix . "." . $parts[ 0 ];
+                        $this->extVars[ $varName ] = new ExtVarEntity( $varName, $parts[ 1 ] );
+                    }
+                }
+            }
+        }
     }
 
     private function parseSection( $section, $content ){
@@ -89,13 +132,20 @@ class GradleFile extends GitFile{
 
             // property points to root
             if( strpos( $value, "rootProject" ) === 0 ){
+                $varValueName = $value;
                 $varValueName = substr( $value, 12 );
                 $varValueName = str_replace( "ext.", "", $varValueName );
-                return $this->parent->extVars[ $varValueName ]->value;
+            }
+            else if( strpos( $value, "project" ) === 0 ){
+                $varValueName = substr( $value, 8 );
+                $varValueName = str_replace( "ext.", "", $varValueName );
             }
             else{
-                return $value;
+                $varValueName = $value;
             }
+
+            $output = $this->parent->extVars[ $varValueName ]->value;
+            return ( $output ) ? $output : GradleFile::NOT_LOADED;
         }
         else{
 
@@ -135,5 +185,10 @@ class GradleFile extends GitFile{
             $leftIndex = $middleIndex;
         }
         $this->extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $gradleFile );
+    }
+
+    private function clearContent( &$content ){
+        $content = str_replace( ' ', '', $content );
+        $content = str_replace( '"', "'", $content );
     }
 }
