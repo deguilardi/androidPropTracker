@@ -48,10 +48,13 @@ class GradleFile extends GitFile{
 
     private function concatExternalFiles( &$content ){
         $matches = array();
-        $regexp = "/(applyfrom\:\')([\$]\{rootDir\}\/){0,}([a-zA-Z0-9\$\{\}\.\/\_\-]{1,})(\')/";
+        $regexpFirstPart = "(applyfrom\:(rootProject\.file\(){0,}\'([\$]\{rootDir\}\/){0,})";
+        $regexpMiddleFile = "([a-zA-Z0-9\$\{\}\.\/\_\-]{1,})";
+        $regextEnding = "(\')";
+        $regexp = "/".$regexpFirstPart.$regexpMiddleFile.$regextEnding."/";
         preg_match( $regexp, $content, $matches, PREG_OFFSET_CAPTURE );
-        if( sizeof( $matches ) && sizeof( $matches[ 3 ] ) > 0 ){
-            $file = $matches[ 3 ][ 0 ];
+        if( sizeof( $matches ) && sizeof( $matches[ 4 ] ) > 0 ){
+            $file = $matches[ 4 ][ 0 ];
             $gitFile = new GitFile( $this->repoEntity, $file, $this->parent );
             $gitFile->load();
             $newContent = $gitFile->content;
@@ -63,17 +66,17 @@ class GradleFile extends GitFile{
     private function loadExtVars( $content ){
 
         // a whole section ext{}
-        $sectionStartPos = strpos( $content, "ext{" );
-        if( $sectionStartPos ){
-            $sectionEndPos = strpos( $content, "}", $sectionStartPos );
-            $sectionContent = substr( $content, $sectionStartPos, $sectionEndPos - $sectionStartPos + 1 );
-            
+        $sectionContent = $this->extractSection( "ext", $content );
+        if( $sectionContent ){
+
             // each var setted as var=value
             $matches = array();
-            $regexp = "/([a-zA-Z0-9]{1,})(\=)([a-zA-Z0-9\.\_]{1,})/";
+            $regexp = "/([a-zA-Z0-9]{1,})(\=)([a-zA-Z0-9\.\_\']{1,})/";
             preg_match_all( $regexp, $sectionContent, $matches, PREG_OFFSET_CAPTURE );
             foreach( $matches[ 1 ] as $k => $var ){
                 $varName = $var[ 0 ];
+                // echo "<pre>".$k;
+                // print_r($matches[ 3 ][ $k ][ 0 ]);
                 $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
             }
         }
@@ -86,10 +89,10 @@ class GradleFile extends GitFile{
         // }
 
         // properties as array ext.prop=[...]
-        $sectionStartPos = strpos( $content, "ext." );
-        if( $sectionStartPos ){
+        // $sectionStartPos = strpos( $content, "ext." );
+        // if( $sectionStartPos ){
             $matches = array();
-            $regexp = "/(ext\.)([a-zA-Z0-9]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
+            $regexp = "/(ext\.){0,}([a-zA-Z0-9]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
             preg_match_all( $regexp, $content, $matches );
             $propertiesListStringList = $matches[ 4 ];
             if( sizeof( $propertiesListStringList ) != 0 ){
@@ -101,23 +104,53 @@ class GradleFile extends GitFile{
                     foreach( $propertiesList as $property ){
                         $parts = explode( ":", $property );
                         $varName = $varPrefix . "." . $parts[ 0 ];
-                        $this->extVars[ $varName ] = new ExtVarEntity( $varName, $parts[ 1 ] );
+                        $varValue = $parts[ 1 ];
+                        if( $varName && $varValue ){
+                            $this->extVars[ $varName ] = new ExtVarEntity( $varName, $varValue );
+                        }
                     }
                 }
             }
-        }
+        // }
     }
 
     private function parseSection( $section, $content ){
-        $sectionStartPos = strpos( $content, $section . "{" );
+        $sectionContent = $this->extractSection( $section, $content );
+        return $this->extractProperty( $sectionContent );
+    }
+
+    /**
+     * Extracts a wholse section like ext{ ... }
+     * Sometimes this can be tricky like:
+     * section{
+     *    var=[ ${something}.value ]
+     * }
+     */
+    private function extractSection( $section, $content ){
+        $sectionStartPos = strpos( $content, $section . "{" ) + strlen( $section );
         if( !$sectionStartPos ){
             return;
         }
 
-        $sectionEndPos = strpos( $content, "}", $sectionStartPos );
-        $sectionContent = substr( $content, $sectionStartPos, $sectionEndPos - $sectionStartPos + 1 );
+        // makes shure all inner "{}" are considered
+        $openBracketPos = $sectionStartPos + 1;
+        $closeBracketPos = -1;
+        while( $nextOpenBracketPos = strpos( $content, "{", $openBracketPos ) ){
+            $closeBracketPos = strpos( $content, "}", $openBracketPos );
+            if( $closeBracketPos ){
+                if( $closeBracketPos < $nextOpenBracketPos ){
+                    break;
+                }
+                else{ 
+                    $nextOpenBracketPos = $closeBracketPos;
+                }
+            }
+            $openBracketPos = $nextOpenBracketPos + 1;
+        }
 
-        return $this->extractProperty( $sectionContent );
+        $sectionEndPos = strpos( $content, "}", $openBracketPos );
+        $sectionEndPos = $sectionEndPos - $sectionStartPos + 1;
+        return substr( $content, $sectionStartPos, $sectionEndPos );
     }
 
     private function extractProperty( $content ){
