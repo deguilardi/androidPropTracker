@@ -6,7 +6,7 @@ class Repository{
     public $repoEntity;
     public $rootGradle;
     public $modulesGradle;
-    public $targetSdkVersionChanges = array();
+    public $propertyChanges = array();
 
     public function __construct( $repo, $folder = "" ){
         $this->repoEntity = new RepositoryEntity( $repo, GIT_BRANCH_DEFAULT, $folder );
@@ -23,15 +23,11 @@ class Repository{
                     $key = $targetSdkVersionChange->commit->date[ "year" ] 
                          . "-" . str_pad( $targetSdkVersionChange->commit->date[ "month" ], 2, '0', STR_PAD_LEFT ) 
                          . "-" . str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
-                    $this->targetSdkVersionChanges[ $key ][] = $targetSdkVersionChange->newValue;
+                    $this->propertyChanges[ $key ][] = $targetSdkVersionChange->newValue;
                 }
             }
         }
-        ksort( $this->targetSdkVersionChanges );
-
-        echo "<pre>";
-        print_r( $this->targetSdkVersionChanges );
-        // print_r( $this->rootGradle );
+        ksort( $this->propertyChanges );
     }
 
     private function loadModuleNames(){
@@ -78,7 +74,11 @@ class Repository{
 
         // normalize output
         foreach( $modules as $k => $module ){
-            $modules[ $k ] = substr( str_replace( ":", "/", $module ), 1 );
+            $module = str_replace( ":", "/", $module );
+            if( strpos( $module, "/" ) === 0 ){
+                $module = substr( $module, 1 );
+            }
+            $modules[ $k ] = $module;
         }
 
         return $modules;
