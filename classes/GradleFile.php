@@ -11,7 +11,7 @@ class GradleFile extends GitFile{
     public $propertyHistory = array();
     public $extVars = array();
 
-    private function __construct( $repoEntity, $file, $parent ){
+    public function __construct( $repoEntity, $file, $parent ){
         parent::__construct( $repoEntity, $file );
         $this->parent = $parent;
         $this->load();
