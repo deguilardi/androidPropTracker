@@ -2,12 +2,15 @@
 class CacheableFile{
 
     private const DIR = "cached";
+    private const ERR_PREFIX = "_err_";
 
     public $id;
     protected $remoteFile;
     public $localFile;
+    public $localErrorFile;
     public $content;
     public $loaded = false;
+    protected $hasError = false;
     // @TODO check timestamp to reload
     // public $updateTimestamp; 
 
@@ -15,11 +18,25 @@ class CacheableFile{
         $this->remoteFile = $remoteFile;
         $this->id = md5( $remoteFile );
         $this->localFile = self::DIR . "/" . $this->id;
+        $this->localErrorFile = self::DIR . "/" . self::ERR_PREFIX . $this->id;
     }
 
     public function load(){
-        if( !$this->loadLocal() ){
-            $this->loadRemote();
+        if( $this->loadLocal() ){
+            $this->loaded = true;
+        }
+        else{
+            if( $this->loadRemote() ){
+                $this->loaded = true;
+                $this->saveLocal();
+            }
+            else{
+                $this->hasError = true;
+                $this->initCacheDir();
+                $file = fopen( $this->localErrorFile, "w" ) or die( "Unable to open file!" );
+                fwrite( $file, $this->content );
+                fclose( $file );
+            }
         }
     }
 
@@ -30,8 +47,11 @@ class CacheableFile{
     protected function loadLocal(){
         if( is_file( $this->localFile ) ){
             $this->content = file_get_contents( $this->localFile );
-            $this->loaded = $this->content ? true : false;
-            return $this->loaded;
+            return ( $this->content ) ? true : false;
+        }
+        else if( is_file( $this->localErrorFile ) ){
+            $this->hasError = true;
+            return true;
         }
         else{
             return false;
@@ -48,14 +68,11 @@ class CacheableFile{
     }
 
     private function loadRemote(){
-        echo "<br>" . "loadRemote";
+        echo "<br>" . "loading remote file:";
         echo "<br>" . $this->remoteFile;
         echo "<br>" . $this->localFile;
         $this->content = @file_get_contents( $this->remoteFile );
-        if( $this->content ){
-            $this->loaded = true;
-            $this->saveLocal();
-        }
+        return ( $this->content ) ? true : false;
     }
 
     private function initCacheDir(){

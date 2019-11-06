@@ -16,7 +16,7 @@ class GitFile extends CacheableFile{
     }
 
     protected function loadCommits(){
-        if( $this->loaded ){
+        if( $this->loaded && !$this->hasError ){
             $this->loadCommitsFromPage( $this->repoEntity->getCommitsListUrlForFile( $this->path ) );
         }
     }
