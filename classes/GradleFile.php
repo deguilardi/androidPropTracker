@@ -5,7 +5,7 @@ include "entities/ExtVarEntity.php";
 
 class GradleFile extends GitFile{
 
-    private const NOT_LOADED = -1;
+    public const NOT_LOADED = -1;
     private $parent;
     public $propertyValue = GradleFile::NOT_LOADED;
     public $propertyHistory = array();
@@ -44,6 +44,9 @@ class GradleFile extends GitFile{
         $this->concatExternalFiles( $content );
         $this->loadExtVars( $content );
         $this->propertyValue = $this->parseSection( "android", $content );
+        if( $this->propertyValue == GradleFile::NOT_LOADED ){
+            $this->propertyValue = $this->parseSection( "defaultConfig", $content );
+        }
     }
 
     private function concatExternalFiles( &$content ){
@@ -75,8 +78,6 @@ class GradleFile extends GitFile{
             preg_match_all( $regexp, $sectionContent, $matches, PREG_OFFSET_CAPTURE );
             foreach( $matches[ 1 ] as $k => $var ){
                 $varName = $var[ 0 ];
-                // echo "<pre>".$k;
-                // print_r($matches[ 3 ][ $k ][ 0 ]);
                 $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
             }
         }
@@ -116,6 +117,7 @@ class GradleFile extends GitFile{
 
     private function parseSection( $section, $content ){
         $sectionContent = $this->extractSection( $section, $content );
+        // echo "<pre><br> = " . $sectionContent;
         return $this->extractProperty( $sectionContent );
     }
 
@@ -174,7 +176,13 @@ class GradleFile extends GitFile{
                 $varValueName = str_replace( "ext.", "", $varValueName );
             }
             else{
-                $varValueName = $value;
+                $intValue = "" . ((int) $value);
+                if( $intValue == $value ){
+                    return $value;
+                }
+                else{
+                    $varValueName = $value;
+                }
             }
 
             $output = $this->parent->extVars[ $varValueName ]->value;
