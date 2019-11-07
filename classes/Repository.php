@@ -6,7 +6,7 @@ class Repository{
     public $repoEntity;
     public $rootGradle;
     public $modulesGradle = array();
-    public $propertyChanges = array( "monthly" => array(), "daily" => array() );
+    public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
 
     public function __construct( $repoEntity ){
         $this->repoEntity = $repoEntity;
@@ -23,14 +23,28 @@ class Repository{
         foreach( $this->modulesGradle as $moduleGradle ){
             if( $moduleGradle->propertyHistory ){
                 foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
-                    $key = $targetSdkVersionChange->commit->date[ "year" ] 
-                         . "-" . str_pad( $targetSdkVersionChange->commit->date[ "month" ], 2, '0', STR_PAD_LEFT );
+                    $year = $targetSdkVersionChange->commit->date[ "year" ];
+                    $month = $targetSdkVersionChange->commit->date[ "month" ];
+
+                    // quartely
+                    $quarter = ceil( $month / 3 );
+                    $key = $year . "-q" . $quarter;
+                    $this->propertyChanges[ "quartely" ][ $key ][ $targetSdkVersionChange->newValue ]++;
+
+                    // monthly
+                    $paddedMonth = str_pad( $month, 2, '0', STR_PAD_LEFT );
+                    $key = $year . "-" . $paddedMonth;
                     $this->propertyChanges[ "monthly" ][ $key ][ $targetSdkVersionChange->newValue ]++;
-                    $key .= "-" . str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
+
+                    // daily
+                    $paddedDay = str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
+                    $key .= "-" . $paddedDay;
                     $this->propertyChanges[ "daily" ][ $key ][ $targetSdkVersionChange->newValue ]++;
                 }
             }
         }
+
+        ksort( $this->propertyChanges[ "quartely" ] );
         ksort( $this->propertyChanges[ "monthly" ] );
         ksort( $this->propertyChanges[ "daily" ] );
     }

@@ -59,6 +59,22 @@ $colors = array(
 );
 
 $projects = $_POST[ "projects" ];
+$granulatity = $_POST[ "granulatity" ];
+
+
+function getPeriodWithGranulatity( $value, $granulatity ){
+	if( $granulatity == "quartely" ){
+		$year = substr( $value, 0, 4 );
+		$month = (int) substr( $value, -2 );
+		$quarter = ceil( $month / 3 );
+		return $year . "-q" . $quarter;
+	}
+	else{
+		return $value;
+	}
+}
+
+
 if( @sizeof( $projects) ){
 	$repos = array();
 	foreach( $projects as $project ){
@@ -66,8 +82,8 @@ if( @sizeof( $projects) ){
 		$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
 		$repos[] = new Repository( $repoEntity );
 	}
-	// init empty results array
-	$results = array();
+
+	// determine min and max months
 	$minMonth = date( "Y-m" );
 	$maxMonth = "2006-01";
 	foreach( $repos as $repo ){
@@ -81,14 +97,21 @@ if( @sizeof( $projects) ){
 		          : $maxMonth;
 	}
 	$maxMonth = ( $maxMonth == "2006-01" ? $minMonth : $maxMonth );
+
+	// determine diff in months
 	$datetimeMin = date_create( $minMonth . "-01" ); 
 	$datetimeMax = date_create( $maxMonth . "-01" );
 	$interval = date_diff( $datetimeMin, $datetimeMax );
-	$diffInMonths = $interval->format( '%y' ) * 12 + $interval->format( '%m' );
+	$diffInMonths = $interval->format( '%y' ) * 12 + $interval->format( '%m' ) + 1;
+
+	// init empty results array
+	$resultsByPeriod = array();
 	$year = date_format( $datetimeMin, "Y" );
 	$month = date_format( $datetimeMin, "m" );
 	for( $i = 0; $i < $diffInMonths; $i++ ){
-		$results[ $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT ) ] = array();
+		$key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
+		$key = getPeriodWithGranulatity( $key, $granulatity );
+		$resultsByPeriod[ $key ] = array();
 		$month++;
 		if( $month > 12 ){
 			$month = 1;
@@ -96,11 +119,11 @@ if( @sizeof( $projects) ){
 		}
 	}
 
-	// distribute results into months
+	// distribute results into period
 	foreach( $repos as $repo ){
-		foreach( $repo->propertyChanges[ "monthly" ] as $period => $changes ){
+		foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
 			foreach( $changes as $key => $change ){
-				$results[ $period ][ $key ] += $change;
+				$resultsByPeriod[ $period ][ $key ] += $change;
 			}
 
 		}
@@ -109,13 +132,13 @@ if( @sizeof( $projects) ){
 	// results grouped by value
 	$resultsByValue = array();
 	foreach( $repos as $repo ){
-		foreach( $repo->propertyChanges[ "monthly" ] as $period => $changes ){
+		foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
 			foreach( $changes as $key => $change ){
 				if( $key == GradleFile::NOT_LOADED ){ continue; }
 
 				// initialize with zeroes
 				if( !$resultsByValue[ $key ] ){
-					foreach( $results as $key2 => $result ){
+					foreach( $resultsByPeriod as $key2 => $result ){
 						$resultsByValue[ $key ][ $key2 ] = 0;
 					}
 				}
@@ -153,6 +176,12 @@ if( @sizeof( $projects) ){
 			<option value="<?=$value;?>"><?=$value;?></option>
 		<?php } ?>
 	</select>
+	<br/>
+	<h3>Granularity</h3>
+	<select name="granulatity">
+		<option value="quartely">Quartely</option>
+		<option value="monthly">Monthly</option>
+	</select>
 	<br />
 	<br />
 	<input type="submit" value="submit" />
@@ -169,7 +198,7 @@ if( @sizeof( $projects) ){
 var lineChartData = {
 	labels: [
 		<?php
-		foreach( $results as $period => $result ){
+		foreach( $resultsByPeriod as $period => $result ){
 			echo '"' . $period . '",';
 		}
 		?>
