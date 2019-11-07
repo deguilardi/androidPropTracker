@@ -41,6 +41,9 @@ class GradleFile extends GitFile{
         }
         $content = $this->content;
         $this->clearContent( $content );
+        // @TODO this doesn't need to be called every time!
+        // to test, a project that needs it is: facebook/fresco
+        $this->loadGradleDotPropertiesFile();
         $this->concatExternalFiles( $content );
         $this->loadExtVars( $content );
         $this->propertyValue = $this->parseSection( "android", $content );
@@ -49,7 +52,26 @@ class GradleFile extends GitFile{
         }
     }
 
+    private function loadGradleDotPropertiesFile(){
+        $file = "gradle.properties";
+        $gitFile = new GitFile( $this->repoEntity, $file, $this->parent );
+        $gitFile->load();
+
+        // properties like ext.prop=value
+        $matches = array();
+        $regexp = "/([a-zA-Z0-9\_\.]{1,})(\=)([a-zA-Z0-9\'\:\,\-\_\.]{1,})/";
+        preg_match_all( $regexp, $gitFile->content, $matches );
+        if( sizeof( $matches ) && sizeof( $matches[ 3 ] ) > 0 ){
+            foreach( $matches[ 1 ] as $k => $varName ){
+                // echo "<br>" . $varName . " - ". $matches[ 3 ][ $k ];
+                $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ] );
+            }
+        }
+    }
+
     private function concatExternalFiles( &$content ){
+
+        // files with "applyFrom"
         $matches = array();
         $regexpFirstPart = "(applyfrom\:(rootProject\.file\(){0,}\'([\$]\{rootDir\}\/){0,})";
         $regexpMiddleFile = "([a-zA-Z0-9\$\{\}\.\/\_\-]{1,})";
@@ -82,23 +104,22 @@ class GradleFile extends GitFile{
             }
         }
 
-        // @TODO
-        // properties like ext.prop=value
-        // $sectionStartPos = strpos( $content, "ext." );
-        // if( $sectionStartPos ){
-
-        // }
-
         // properties as array ext.prop=[...]
         // $sectionStartPos = strpos( $content, "ext." );
         // if( $sectionStartPos ){
             $matches = array();
-            $regexp = "/(ext\.){0,}([a-zA-Z0-9]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
+            $regexp = "/([a-zA-Z0-9\_]{1,}\.){0,}([a-zA-Z0-9\_]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
             preg_match_all( $regexp, $content, $matches );
             $propertiesListStringList = $matches[ 4 ];
             if( sizeof( $propertiesListStringList ) != 0 ){
                 $varPrefix = $matches[ 2 ][ 0 ];
-                foreach( $propertiesListStringList as $propertiesListString){
+                foreach( $propertiesListStringList as $propertiesListString ){
+
+                    // filter some array initialization
+                    if( $propertiesListString == ":" ){
+                        continue;
+                    }
+
                     $propertiesListString = str_replace( "'", "" , $propertiesListString );
                     $propertiesListString = str_replace( "\n", "" , $propertiesListString );
                     $propertiesList = explode( ",", $propertiesListString );
@@ -113,11 +134,20 @@ class GradleFile extends GitFile{
                 }
             }
         // }
+
+        // properties like ext.prop=value
+        $matches = array();
+        $regexp = "/([a-zA-Z0-9\_]{0,}\.[a-zA-Z0-9\_]{1,})(\=)([a-zA-Z0-9\'\:\,\-\_\.]{1,})/";
+        preg_match_all( $regexp, $content, $matches );
+        if( sizeof( $matches ) && sizeof( $matches[ 3 ] ) > 0 ){
+            foreach( $matches[ 1 ] as $k => $varName ){
+                $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ] );
+            }
+        }
     }
 
     private function parseSection( $section, $content ){
         $sectionContent = $this->extractSection( $section, $content );
-        // echo "<pre><br> = " . $sectionContent;
         return $this->extractProperty( $sectionContent );
     }
 
@@ -160,7 +190,7 @@ class GradleFile extends GitFile{
 
         // property is explicit
         $matches = array();
-        $regexp = "/($property)([a-zA-Z0-9\.]{0,})/";
+        $regexp = "/($property)([a-zA-Z0-9\.\_]{0,})/";
         preg_match($regexp, $content, $matches, PREG_OFFSET_CAPTURE);
         if( sizeof( $matches ) >= 3 ){
             $value = $matches[ 2 ][ 0 ];
@@ -176,8 +206,7 @@ class GradleFile extends GitFile{
                 $varValueName = str_replace( "ext.", "", $varValueName );
             }
             else{
-                $intValue = "" . ((int) $value);
-                if( $intValue == $value ){
+                if( is_numeric( $value ) ){
                     return $value;
                 }
                 else{
@@ -186,13 +215,10 @@ class GradleFile extends GitFile{
             }
 
             $output = $this->parent->extVars[ $varValueName ]->value;
+            $output = ( is_numeric( $output ) ) ? $output : $this->parent->extVars[ $output ]->value;
             return ( $output ) ? $output : GradleFile::NOT_LOADED;
         }
         else{
-
-            // @TODO
-            // property is loaded from ext
-
             return GradleFile::NOT_LOADED;
         }
     }
