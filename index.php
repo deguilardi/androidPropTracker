@@ -5,12 +5,21 @@ include "classes/Repository.php";
 $reposOptions = array(
 
 	// facebook
+	new RepositoryEntity( "/facebook/device-year-class", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/facebook/facebook-android-sdk", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/facebook/flipper", GIT_BRANCH_DEFAULT, "" ),
+	new RepositoryEntity( "/facebook/fresco", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/facebook/screenshot-tests-for-android", GIT_BRANCH_DEFAULT, "" ),
+	new RepositoryEntity( "/facebook/shimmer-android", GIT_BRANCH_DEFAULT, "" ),
+	new RepositoryEntity( "/facebook/stetho", GIT_BRANCH_DEFAULT, "" ),
+	new RepositoryEntity( "/facebook/TextLayoutBuilder", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/facebook/yoga", GIT_BRANCH_DEFAULT, "" ),
 
 	// google
+	new RepositoryEntity( "/android/architecture-components-samples", GIT_BRANCH_DEFAULT, "BasicSample" ),
+	new RepositoryEntity( "/android/architecture-components-samples", GIT_BRANCH_DEFAULT, "PersistenceContentProviderSample" ),
+	new RepositoryEntity( "/android/architecture-components-samples", GIT_BRANCH_DEFAULT, "PersistenceMigrationsSample" ),
+	new RepositoryEntity( "/android/architecture-components-samples", GIT_BRANCH_DEFAULT, "WorkManagerSample" ),
 	new RepositoryEntity( "/android/architecture-samples", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/android/plaid", GIT_BRANCH_DEFAULT, "" ),
 	new RepositoryEntity( "/android/sunflower", GIT_BRANCH_DEFAULT, "" ),
@@ -22,7 +31,6 @@ $reposOptions = array(
 	new RepositoryEntity( "/DrKLO/Telegram", GIT_BRANCH_DEFAULT, "" ), 
 
 	// @TODO different pattern
-	// new RepositoryEntity( "/android/architecture-components-samples", GIT_BRANCH_DEFAULT, "PagingSample" ),
 
 	// work with no result
 	// new RepositoryEntity( "/android/topeka", GIT_BRANCH_DEFAULT, "" ),
@@ -31,6 +39,8 @@ $reposOptions = array(
 	// new RepositoryEntity( "/android/user-interface-samples", GIT_BRANCH_DEFAULT, "AdvancedImmersiveMode" ),
 	// new RepositoryEntity( "/android/user-interface-samples", GIT_BRANCH_DEFAULT, "ElevationBasic" ),
 	// new RepositoryEntity( "/android/user-interface-samples", GIT_BRANCH_DEFAULT, "Notifications" ),
+	// new RepositoryEntity( "/facebook/conceal", GIT_BRANCH_DEFAULT, "" ),
+	// new RepositoryEntity( "/facebook/SoLoader", GIT_BRANCH_DEFAULT, "" ),
 );
 
 $colors = array(
@@ -176,7 +186,7 @@ var lineChartData = {
 			         data:[";
 
 			foreach( $results as $result ){
-				echo $result . ",";
+				echo ( $result ? $result : "null" ) . ",";
 			}
 			echo "]},";
 			$i++;
