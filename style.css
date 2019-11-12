@@ -1,0 +1,13 @@
+canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.resultsTableHolder{
+    overflow: auto;
+    width: 100%;
+}
+table.resultsTable tbody td{
+    text-align: center;
+}
