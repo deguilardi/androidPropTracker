@@ -8,6 +8,13 @@ canvas {
     overflow: auto;
     width: 100%;
 }
+table.resultsTable thead th{
+    font-size: 0.7em;
+    color: #333;
+}
 table.resultsTable tbody td{
     text-align: center;
+}
+table.resultsTable tbody td.light{
+    color: #eee;
 }
