@@ -10,6 +10,7 @@ canvas {
 }
 table.resultsTable{
 	background-color:rgb(240,240,255);
+	min-width: 100%;
 }
 table.resultsTable thead th{
     font-size: 0.5em;

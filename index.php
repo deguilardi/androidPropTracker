@@ -2,11 +2,19 @@
 
 include "classes/Results.php";
 
-$projects = $_POST[ "projects" ];
+$projects = $_POST[ "projects" ] ? $_POST[ "projects" ] : array();
 $granulatity = $_POST[ "granulatity" ];
 $propToTrack = $_POST[ "propToTrack" ];
 define( 'PARAM_TO_TRACK', $propToTrack );
 
+// extract other projects field
+$otherProjects = $_POST[ "otherProjects" ];
+$matches = array();
+$regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0,})/";
+preg_match_all( $regexp, $otherProjects, $matches );
+if( sizeof( $matches ) && sizeof( $matches[0] ) ){
+	$projects = array_merge( $projects, $matches[ 0 ] );
+}
 
 $resultsObj = new Results( $projects, $granulatity );
 ?>
@@ -68,7 +76,7 @@ $resultsObj = new Results( $projects, $granulatity );
 </head>
 <body>
 
-<div class="container">
+<div class="container-fluid">
 	<h1>Android Project Prop Tracker</h1>
 
 	<div class="accordion" id="accordionExample">
@@ -91,13 +99,16 @@ $resultsObj = new Results( $projects, $granulatity );
 									foreach( $reposOptions as $repo ){ 
 										$value = $repo->repo . ":" . $repo->branch . ":" . $repo->folder;
 									?>
-										<option value="<?=$value;?>"><?=$value;?></option>
+										<option value="<?=$value;?>"
+												<?=( array_search( $value, $projects ) !== false ? "selected" : "" );?>>
+											<?=$value;?>
+										</option>
 									<?php } ?>
 								</select>
 							</div>
 							<div class="col-sm">
 								<label for="otherProjects">Other projects</label>
-								<textarea class="form-control" rows="8" id="otherProjects" placeholder="@todo" disabled></textarea>
+								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/proj:branch:folder ... separete each repository using '|' ... no spaces allowed"><?=$otherProjects;?></textarea>
 							</div>
 						</div>
 						<hr />
@@ -105,26 +116,31 @@ $resultsObj = new Results( $projects, $granulatity );
 							<div class="col-sm">
 								<label for="propToTrack">Property to track</label>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToTrack" id="minSdkVersion" value="minSdkVersion" >
+								  <input class="form-check-input" type="radio" name="propToTrack" id="minSdkVersion" value="minSdkVersion"
+								  		 <?=( $propToTrack == "minSdkVersion" ? "checked" : "" );?> >
 								  <label class="form-check-label" for="minSdkVersion">minSdkVersion</label>
 								</div>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToTrack" id="compileSdkVersion" value="compileSdkVersion" >
+								  <input class="form-check-input" type="radio" name="propToTrack" id="compileSdkVersion" value="compileSdkVersion"
+								  		 <?=( $propToTrack == "compileSdkVersion" ? "checked" : "" );?> >
 								  <label class="form-check-label" for="compileSdkVersion">compileSdkVersion</label>
 								</div>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToTrack" id="targetSdkVersion" value="targetSdkVersion" checked>
+								  <input class="form-check-input" type="radio" name="propToTrack" id="targetSdkVersion" value="targetSdkVersion"
+								  		 <?=( $propToTrack == "targetSdkVersion" || !$targetSdkVersion ? "checked" : "" );?>>
 								  <label class="form-check-label" for="targetSdkVersion">targetSdkVersion</label>
 								</div>
 							</div>
 							<div class="col-sm">
 								<label for="granulatity">Granulatity</label>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityMonthly" value="monthly" checked>
+								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityMonthly" value="monthly"
+								  		 <?=( $granulatity == "monthly" || !$granulatity ? "checked" : "" );?>>
 								  <label class="form-check-label" for="granulatityMonthly">monthly</label>
 								</div>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityQuartely" value="quartely">
+								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityQuartely" value="quartely"
+								  		 <?=( $granulatity == "quartely" ? "checked" : "" );?>>
 								  <label class="form-check-label" for="granulatityQuartely">quartely</label>
 								</div>
 							</div>
@@ -146,9 +162,18 @@ $resultsObj = new Results( $projects, $granulatity );
 		    	<div class="card-body">
 		    		
 					<? if( $resultsObj->hasProjects ){ ?>
+
+					<div class="card">
+						<div class="card-body">
+						<strong>Results for project(s): </strong><?=implode( "|", $projects );?>
+						<br /><strong>Tracking property: </strong><?=$propToTrack;?>
+						<br /><strong>Granulatity: </strong><?=$granulatity;?>
+					</div>
+					</div>
+					<br />
 						
 					<div class="resultsTableHolder">
-						<table class="resultsTable">
+						<table class="resultsTable table">
 							<thead>
 								<tr>
 									<th>API levels</th>
