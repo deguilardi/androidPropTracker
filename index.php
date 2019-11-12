@@ -58,8 +58,8 @@ $colors = array(
 
 $projects = $_POST[ "projects" ];
 $granulatity = $_POST[ "granulatity" ];
-$propToExtract = $_POST[ "propToExtract" ];
-define( 'PARAM_TO_EXTRACT', $propToExtract );
+$propToTrack = $_POST[ "propToTrack" ];
+define( 'PARAM_TO_TRACK', $propToTrack );
 
 
 function getPeriodWithGranulatity( $value, $granulatity ){
@@ -198,17 +198,17 @@ if( @sizeof( $projects) ){
 						<hr />
 						<div class="row">
 							<div class="col-sm">
-								<label for="propToExtract">Property to extract</label>
+								<label for="propToTrack">Property to track</label>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToExtract" id="minSdkVersion" value="minSdkVersion" >
+								  <input class="form-check-input" type="radio" name="propToTrack" id="minSdkVersion" value="minSdkVersion" >
 								  <label class="form-check-label" for="minSdkVersion">minSdkVersion</label>
 								</div>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToExtract" id="compileSdkVersion" value="compileSdkVersion" >
+								  <input class="form-check-input" type="radio" name="propToTrack" id="compileSdkVersion" value="compileSdkVersion" >
 								  <label class="form-check-label" for="compileSdkVersion">compileSdkVersion</label>
 								</div>
 								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="propToExtract" id="targetSdkVersion" value="targetSdkVersion" checked>
+								  <input class="form-check-input" type="radio" name="propToTrack" id="targetSdkVersion" value="targetSdkVersion" checked>
 								  <label class="form-check-label" for="targetSdkVersion">targetSdkVersion</label>
 								</div>
 							</div>

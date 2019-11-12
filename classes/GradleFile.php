@@ -186,7 +186,7 @@ class GradleFile extends GitFile{
     }
 
     private function extractProperty( $content ){
-        $property = PARAM_TO_EXTRACT;
+        $property = PARAM_TO_TRACK;
 
         // property is explicit
         $matches = array();
@@ -224,7 +224,7 @@ class GradleFile extends GitFile{
     }
 
     private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $lastGradleFile ){
-        $property = PARAM_TO_EXTRACT;
+        $property = PARAM_TO_TRACK;
         if( !$this->loaded || sizeof( $this->commits ) <= 1 ){ return; }
         $middleIndex = $leftIndex + floor( ( $rightIndex - $leftIndex ) / 2 );
         if( $middleIndex == sizeof( $this->commits ) - 2 ){ return; }
