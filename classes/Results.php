@@ -7,6 +7,7 @@ class Results{
 	private $resultsByValue = array();
 	public $hasProjects = false;
 	public $hasResults = false;
+	private $max = 0;
 
 	public function __construct( $projects, $granulatity ){
 		if( @sizeof( $projects) ){
@@ -53,13 +54,15 @@ class Results{
 				}
 			}
 
-			// distribute results into period
+			// distribute results into periods
 			foreach( $repos as $repo ){
 				foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
-					foreach( $changes as $key => $change ){
-						$this->resultsByPeriod[ $period ][ $key ] += $change;
+					$numItems = sizeof( $changes );
+					foreach( $changes as $propValue => $change ){
+						if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+						$this->resultsByPeriod[ $period ][ $propValue ] += $change;
+						$this->calculateMax( $this->resultsByPeriod[ $period ][ $propValue ] );
 					}
-
 				}
 			}
 
@@ -67,17 +70,17 @@ class Results{
 			$this->resultsByValue = array();
 			foreach( $repos as $repo ){
 				foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
-					foreach( $changes as $key => $change ){
-						if( $key == GradleFile::NOT_LOADED ){ continue; }
+					foreach( $changes as $propValue => $change ){
+						if( $propValue == GradleFile::NOT_LOADED ){ continue; }
 
 						// initialize with zeroes
-						if( !$this->resultsByValue[ $key ] ){
+						if( !$this->resultsByValue[ $propValue ] ){
 							foreach( $this->resultsByPeriod as $key2 => $result ){
-								$this->resultsByValue[ $key ][ $key2 ] = 0;
+								$this->resultsByValue[ $propValue ][ $key2 ] = 0;
 							}
 						}
 
-						$this->resultsByValue[ $key ][ $period ] += $change;
+						$this->resultsByValue[ $propValue ][ $period ] += $change;
 					}
 				}
 			}
@@ -96,6 +99,11 @@ class Results{
 		return $this->resultsByValue;
 	}
 
+	public function getColorForValue( $value, $resultHeatColors ){
+		$index = ceil( $value / $this->max * sizeof( $resultHeatColors ) ) - 1;
+		return( $resultHeatColors[ $index ] );
+	}
+
 	private function getPeriodWithGranulatity( $value, $granulatity ){
 		if( $granulatity == "quartely" ){
 			$year = substr( $value, 0, 4 );
@@ -106,6 +114,10 @@ class Results{
 		else{
 			return $value;
 		}
+	}
+
+	private function calculateMax( $value ){
+		$this->max = ( $value > $this->max ) ? $value : $this->max;
 	}
 }
 ?>

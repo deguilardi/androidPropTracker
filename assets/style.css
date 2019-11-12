@@ -8,13 +8,17 @@ canvas {
     overflow: auto;
     width: 100%;
 }
+table.resultsTable{
+	background-color:rgb(240,240,255);
+}
 table.resultsTable thead th{
-    font-size: 0.7em;
+    font-size: 0.5em;
     color: #333;
 }
 table.resultsTable tbody td{
+	font-size: 0.6em;
     text-align: center;
 }
 table.resultsTable tbody td.light{
-    color: #eee;
+    color: #ccc;
 }

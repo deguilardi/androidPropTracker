@@ -162,7 +162,10 @@ $resultsObj = new Results( $projects, $granulatity );
 									<tr>
 									<td><?=$value;?></td>
 										<? foreach( $results as $result ){ ?>
-											<td class="<?=($result == 0) ? "light" : "";?>"><?=$result;?></td>
+											<td class="<?=($result == 0) ? "light" : "";?>"
+												style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
+												<?=$result;?>
+											</td>
 										<? } ?>
 									</tr>
 								<?php } ?>
