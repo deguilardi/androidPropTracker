@@ -127,7 +127,7 @@ $resultsObj = new Results( $projects, $granulatity );
 								</div>
 								<div class="form-check">
 								  <input class="form-check-input" type="radio" name="propToTrack" id="targetSdkVersion" value="targetSdkVersion"
-								  		 <?=( $propToTrack == "targetSdkVersion" || !$targetSdkVersion ? "checked" : "" );?>>
+								  		 <?=( $propToTrack == "targetSdkVersion" || !$propToTrack ? "checked" : "" );?>>
 								  <label class="form-check-label" for="targetSdkVersion">targetSdkVersion</label>
 								</div>
 							</div>
