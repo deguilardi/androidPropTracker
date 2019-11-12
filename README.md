@@ -1,6 +1,6 @@
 Android project prop tracker
 ===================
-Tracks a gradle config variable change of Android projects on github
+This project tracks changes of a gradle config property of Android projects on github. You can track every change of the properties minSdkVersion, compileSdkVersion and targetSdkVersion.
 
 ## Requirements
   - **apache2**: you must install apache2
@@ -18,3 +18,7 @@ Tracks a gradle config variable change of Android projects on github
   ![Results Image](https://raw.githubusercontent.com/deguilardi/android_project_prop_tracker/master/assets/github/results.png)
 
 ## How it works
+  ![Modules diagrams Image](https://raw.githubusercontent.com/deguilardi/android_project_prop_tracker/master/assets/github/modules-diagrams.png)
+
+## Limitations
+  - There are currently only 3 properties that can be tracked: minSdkVersion, compileSdkVersion and targetSdkVersion. There are plans to make it work for any gradle property.
