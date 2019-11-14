@@ -25,6 +25,10 @@ class GitFile extends CacheableFile{
         $commitsListFile = new CacheableFile( $url );
         $commitsListFile->load();
 
+        if( !$commitsListFile->content ){
+            return;
+        }
+
         $htmlDoc = new DOMDocument();
         libxml_use_internal_errors( true );
         $htmlDoc->loadHTML( $commitsListFile->content );
