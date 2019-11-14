@@ -2,7 +2,7 @@
 class CacheableFile{
 
     private const DIR = "cached";
-    private const ERR_PREFIX = "_err_";
+    private const ERR_PREFIX = "_err/";
 
     public $id;
     protected $remoteFile;
