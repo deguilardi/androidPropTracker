@@ -167,7 +167,7 @@ class GradleFile extends GitFile{
         // makes shure all inner "{}" are considered
         $openBracketPos = $sectionStartPos + 1;
         $closeBracketPos = -1;
-        while( $nextOpenBracketPos = strpos( $content, "{", $openBracketPos ) ){
+        while( $nextOpenBracketPos = @strpos( $content, "{", $openBracketPos ) ){
             $closeBracketPos = strpos( $content, "}", $openBracketPos );
             if( $closeBracketPos ){
                 if( $closeBracketPos < $nextOpenBracketPos ){
@@ -180,7 +180,7 @@ class GradleFile extends GitFile{
             $openBracketPos = $nextOpenBracketPos + 1;
         }
 
-        $sectionEndPos = strpos( $content, "}", $openBracketPos );
+        $sectionEndPos = @strpos( $content, "}", $openBracketPos );
         $sectionEndPos = $sectionEndPos - $sectionStartPos + 1;
         return substr( $content, $sectionStartPos, $sectionEndPos );
     }
