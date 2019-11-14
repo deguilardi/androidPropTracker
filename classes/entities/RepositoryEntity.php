@@ -24,4 +24,8 @@ class RepositoryEntity{
                             . ( $this->folder ? "/" . $this->folder : "" )
                             . "/" . $file;
     }
+
+    public function getHash(){
+        return md5( $this->repo . $this->branch . $this->folder );
+    }
 }
