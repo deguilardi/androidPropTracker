@@ -24,11 +24,11 @@ class Results{
 			$maxMonth = "2006-01";
 			foreach( $repos as $repo ){
 				$repoMinMonth = array_key_first( $repo->propertyChanges[ "monthly" ] );
-				$minMonth = $repoMinMonth < $minMonth
+				$minMonth = $repoMinMonth && $repoMinMonth < $minMonth
 				          ? $repoMinMonth
 				          : $minMonth;
 				$repoMaxMonth = array_key_last( $repo->propertyChanges[ "monthly" ] );
-				$maxMonth = $repoMaxMonth > $maxMonth
+				$maxMonth = $repoMaxMonth && $repoMaxMonth > $maxMonth
 				          ? $repoMaxMonth
 				          : $maxMonth;
 			}
