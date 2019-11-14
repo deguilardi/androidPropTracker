@@ -1,5 +1,6 @@
 <?php
 include "GradleFile.php";
+include "RepositoryCache.php";
 include "config.inc";
 
 class Repository{
@@ -9,6 +10,12 @@ class Repository{
     public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
 
     public function __construct( $repoEntity ){
+        $results = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
+        if( $results ){
+            $this->propertyChanges = $results;
+            return;
+        }
+
         $this->repoEntity = $repoEntity;
         $this->rootGradle = GradleFile::factoryMaster( $this->repoEntity, "build.gradle", null );
 
@@ -47,6 +54,8 @@ class Repository{
         ksort( $this->propertyChanges[ "quartely" ] );
         ksort( $this->propertyChanges[ "monthly" ] );
         ksort( $this->propertyChanges[ "daily" ] );
+
+        RepositoryCache::save( $this );
     }
 
     private function loadModuleNames(){

@@ -1,0 +1,3 @@
+[submodule "libs/github-php-client"]
+	path = libs/github-php-client
+	url = https://github.com/tan-tan-kanarek/github-php-client.git
