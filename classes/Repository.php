@@ -10,9 +10,12 @@ class Repository{
     public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
 
     public function __construct( $repoEntity ){
-        $results = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
-        if( $results ){
-            $this->propertyChanges = $results;
+        $cache = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
+        if( $cache ){
+            $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
+            $this->propertyChanges = $cache[ "propertyChanges" ];
+
+            // @todo extract other propertyes if needed
             return;
         }
 

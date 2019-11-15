@@ -22,7 +22,7 @@ class CacheableFile{
     }
 
     public function load(){
-        if( $this->loadLocal() ){
+        if( ENABLE_CACHE && $this->loadLocal() ){
             $this->loaded = true;
         }
         else{
@@ -31,6 +31,7 @@ class CacheableFile{
                 $this->saveLocal();
             }
             else{
+                // echo "<br> error!";
                 $this->hasError = true;
                 $this->initCacheDir();
                 $file = fopen( $this->localErrorFile, "w" ) or die( "Unable to open file!" );
@@ -45,7 +46,7 @@ class CacheableFile{
     }
 
     protected function loadLocal(){
-        if( is_file( $this->localFile ) ){
+        if( ENABLE_CACHE && is_file( $this->localFile ) ){
             $this->content = file_get_contents( $this->localFile );
             return ( $this->content ) ? true : false;
         }
@@ -59,7 +60,7 @@ class CacheableFile{
     }
 
     protected function saveLocal(){
-        if( $this->content ){
+        if( ENABLE_CACHE && $this->content ){
             $this->initCacheDir();
             $file = fopen( $this->localFile, "w" ) or die( "Unable to open file!" );
             fwrite( $file, $this->content );
@@ -68,16 +69,17 @@ class CacheableFile{
     }
 
     private function loadRemote(){
-        echo "<br>" . "loading remote file:";
-        echo "<br>" . $this->remoteFile;
-        echo "<br>" . $this->localFile;
+        // echo "<br><br/>" . "loading remote file:";
+        // echo "<br>" . $this->remoteFile;
+        // echo "<br>" . $this->localFile;
         $this->content = @file_get_contents( $this->remoteFile );
         return ( $this->content ) ? true : false;
     }
 
     private function initCacheDir(){
-        if( !is_dir( CacheableFile::DIR ) ){
+        if( ENABLE_CACHE && !is_dir( CacheableFile::DIR ) ){
             mkdir( CacheableFile::DIR );
+            mkdir( CacheableFile::DIR . "/" . CacheableFile::ERR_PREFIX );
         }
     }
 }

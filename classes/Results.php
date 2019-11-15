@@ -8,6 +8,8 @@ class Results{
 	public $hasProjects = false;
 	public $hasResults = false;
 	private $max = 0;
+	public $reposWithNoChangesDetected = array();
+	public $reposWithChangesDetected = array();
 
 	public function __construct( $projects, $granulatity ){
 		if( @sizeof( $projects) ){
@@ -84,6 +86,18 @@ class Results{
 					}
 				}
 			}
+
+			// has results?
+			foreach( $repos as $repo ){
+				if( sizeof( $repo->propertyChanges[ $granulatity ] ) ){
+					$this->reposWithChangesDetected[] = $repo;
+				}
+				else{
+					$this->reposWithNoChangesDetected[] = $repo;
+				}
+			}
+
+
 			if( sizeof($this->resultsByValue) ){
 				$this->hasResults = true;
 		    	ksort( $this->resultsByValue );
