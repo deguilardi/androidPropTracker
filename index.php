@@ -1,5 +1,7 @@
 <?php
+set_time_limit( 0 );
 
+include "keys.inc";
 include "classes/Results.php";
 
 $projects = $_POST[ "projects" ] ? $_POST[ "projects" ] : array();
@@ -108,7 +110,7 @@ $resultsObj = new Results( $projects, $granulatity );
 							</div>
 							<div class="col-sm">
 								<label for="otherProjects">Other projects</label>
-								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/proj:branch:folder ... separete each repository using '|' ... no spaces allowed"><?=$otherProjects;?></textarea>
+								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/proj:branch:folder ... separete each repository using breakline ... no spaces allowed"><?=$otherProjects;?></textarea>
 							</div>
 						</div>
 						<hr />
@@ -165,10 +167,38 @@ $resultsObj = new Results( $projects, $granulatity );
 
 					<div class="card">
 						<div class="card-body">
-						<strong>Results for project(s): </strong><?=implode( "|", $projects );?>
-						<br /><strong>Tracking property: </strong><?=$propToTrack;?>
-						<br /><strong>Granulatity: </strong><?=$granulatity;?>
-					</div>
+							<strong>Tracking property: </strong><?=$propToTrack;?>
+							<br /><strong>Granulatity: </strong><?=$granulatity;?>
+							<br />
+
+							<div class="container-fluid">
+								<div class="row">
+									<div class="col-sm">
+										<br /><strong>Results for projects: </strong> <?=sizeof( $projects );?>
+										<br />
+										<textarea class="form-control"><?=implode( "\n", $projects );?></textarea>
+									</div>
+									<div class="col-sm">
+										<br /><strong>Projects with changes detected: </strong><?=sizeof( $resultsObj->reposWithChangesDetected );?>
+										<br />
+										<textarea class="form-control"><?php
+											foreach( $resultsObj->reposWithChangesDetected as $repo ){
+												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
+											}
+										?></textarea>
+									</div>
+									<div class="col-sm">
+										<br /><strong>Projects with no changes detected: </strong><?=sizeof( $resultsObj->reposWithNoChangesDetected );?>
+										<br />
+										<textarea class="form-control"><?php
+											foreach( $resultsObj->reposWithNoChangesDetected as $repo ){
+												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
+											}
+										?></textarea>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 					<br />
 						
