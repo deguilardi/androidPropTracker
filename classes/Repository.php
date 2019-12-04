@@ -20,14 +20,14 @@ class Repository{
         }
 
         $this->repoEntity = $repoEntity;
-        $this->rootGradle = GradleFile::factoryMaster( $this->repoEntity, "build.gradle", null );
+        $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
 
         $moduleNames = $this->loadModuleNames();
         foreach( $moduleNames as $moduleName ){
-            $this->modulesGradle[] = GradleFile::factoryMaster( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
+            $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
         }
         if( sizeof( $this->modulesGradle ) == 0 ){
-            $this->modulesGradle[] = GradleFile::factoryMaster( $this->repoEntity, "app" . "/build.gradle", $this->rootGradle );
+            $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, "app" . "/build.gradle", $this->rootGradle );
         }
 
         foreach( $this->modulesGradle as $moduleGradle ){

@@ -7,35 +7,51 @@ class GradleFile extends GitFile{
 
     public const NOT_LOADED = -1;
     private $parent;
-    public $propertyValue = GradleFile::NOT_LOADED;
+    public $propertyValue = self::NOT_LOADED;
     public $propertyHistory = array();
     public $extVars = array();
 
-    public function __construct( $repoEntity, $file, $parent ){
+    protected function __construct( $repoEntity, $file, $parent, $isLastVersion ){
         parent::__construct( $repoEntity, $file );
         $this->parent = $parent;
         $this->load();
+        if( $isLastVersion ){
+            $this->loadCommits();
+        }
         $this->initialParse( $this->content );
         $this->clear();
     }
 
-    public function factoryMaster( $repoEntity, $file, $parent ){
-        $gradleFile = new GradleFile( $repoEntity, $file, $parent );
-        $gradleFile->loadCommits();
+    public function factoryRootLastVersion( $repoEntity, $file ){
+        $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
+        $gradleFile->_debug( "factory root last version: ". $file, "<hr/>" );
+        $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
+        return $gradleFile;
+    }
+
+    public function factoryModuleLastVersion( $repoEntity, $file, $parent ){
+        // echo "<hr/><hr/><hr/><hr/><hr/>";
+        $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
+        $gradleFile->_debug( "factory module last version: ". $file );
+        $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
+        $gradleFile->_debug( "parent remote file: " . $parent->remoteFile );
+        $gradleFile->_debug( "number of commits before merge: " . sizeof( $gradleFile->commits ) );
+        $gradleFile->mergeCommits( $parent->commits );
+        $gradleFile->_debug( "number of commits after merge: " . sizeof( $gradleFile->commits ) );
         $gradleFile->extractPropertyChangeHistory( $gradleFile, 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         return $gradleFile;
     }
 
-    public function factoryWithCommit( $repoEntity, $file, $hasParent ){
+    public function factoryFromCommit( $repoEntity, $file, $hasParent ){
         $parent = null;
         if( $hasParent ){
-            $parent = GradleFile::factoryWithCommit( $repoEntity, $this->parent->path, false );
+            $parent = self::factoryFromCommit( $repoEntity, $this->parent->path, null, false );
         }
-        $gradleFile = new GradleFile( $repoEntity, $file, $parent );
+        $gradleFile = new GradleFile( $repoEntity, $file, $parent, false );
         return $gradleFile;
     }
 
-    private function initialParse( $content ){
+    private function initialParse( $content ){//echo "<br><br>initial parse<br><br><br>";
         if( !$this->content ){
             return;
         }
@@ -47,7 +63,7 @@ class GradleFile extends GitFile{
         $this->concatExternalFiles( $content );
         $this->loadExtVars( $content );
         $this->propertyValue = $this->parseSection( "android", $content );
-        if( $this->propertyValue == GradleFile::NOT_LOADED ){
+        if( $this->propertyValue == self::NOT_LOADED ){
             $this->propertyValue = $this->parseSection( "defaultConfig", $content );
         }
     }
@@ -80,8 +96,11 @@ class GradleFile extends GitFile{
         preg_match( $regexp, $content, $matches, PREG_OFFSET_CAPTURE );
         if( sizeof( $matches ) && sizeof( $matches[ 4 ] ) > 0 ){
             $file = $matches[ 4 ][ 0 ];
+            $this->_debug( "concat external file: ". $file );
             $gitFile = new GitFile( $this->repoEntity, $file, $this->parent );
             $gitFile->load();
+            $gitFile->loadCommits();
+            $this->mergeCommits( $gitFile->commits );
             $newContent = $gitFile->content;
             $this->clearContent( $newContent );
             $content .= $newContent;
@@ -89,9 +108,11 @@ class GradleFile extends GitFile{
     }
 
     private function loadExtVars( $content ){
+        // $this->_debug( $content );
 
         // a whole section ext{}
         $sectionContent = $this->extractSection( "ext", $content );
+        // $this->_debug( $sectionContent );
         if( $sectionContent ){
 
             // each var setted as var=value
@@ -108,7 +129,7 @@ class GradleFile extends GitFile{
         // $sectionStartPos = strpos( $content, "ext." );
         // if( $sectionStartPos ){
             $matches = array();
-            $regexp = "/([a-zA-Z0-9\_]{1,}\.){0,}([a-zA-Z0-9\_]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.]{0,})(\])/";
+            $regexp = "/([a-zA-Z0-9\_]{1,}\.){0,}([a-zA-Z0-9\_]{1,})(\=\[)([a-zA-Z0-9\n\'\:\,\-\_\.\/]{0,})(\])/";
             preg_match_all( $regexp, $content, $matches );
             $propertiesListStringList = $matches[ 4 ];
             if( sizeof( $propertiesListStringList ) != 0 ){
@@ -152,7 +173,7 @@ class GradleFile extends GitFile{
     }
 
     /**
-     * Extracts a wholse section like ext{ ... }
+     * Extracts a whole section like ext{ ... }
      * Sometimes this can be tricky like:
      * section{
      *    var=[ ${something}.value ]
@@ -163,7 +184,6 @@ class GradleFile extends GitFile{
         if( !$sectionStartPos ){
             return;
         }
-
         // makes shure all inner "{}" are considered
         $openBracketPos = $sectionStartPos + 1;
         $closeBracketPos = -1;
@@ -179,13 +199,13 @@ class GradleFile extends GitFile{
             }
             $openBracketPos = $nextOpenBracketPos + 1;
         }
-
         $sectionEndPos = @strpos( $content, "}", $openBracketPos );
         $sectionEndPos = $sectionEndPos - $sectionStartPos + 1;
         return substr( $content, $sectionStartPos, $sectionEndPos );
     }
 
     private function extractProperty( $content ){
+        $this->_debug( "extracting property" );
         $property = PARAM_TO_TRACK;
 
         // property is explicit
@@ -200,62 +220,94 @@ class GradleFile extends GitFile{
                 $varValueName = $value;
                 $varValueName = substr( $value, 12 );
                 $varValueName = str_replace( "ext.", "", $varValueName );
+                $this->_debug( "    var value name in rootProject: set as: ". $varValueName );
             }
             else if( strpos( $value, "project" ) === 0 ){
                 $varValueName = substr( $value, 8 );
                 $varValueName = str_replace( "ext.", "", $varValueName );
+                $this->_debug( "    var value name in project: set as: ". $varValueName );
             }
             else{
                 if( is_numeric( $value ) ){
+                    $this->_debug( "    property found: numeric in file" );
                     return $value;
                 }
                 else{
                     $varValueName = $value;
+                    $this->_debug( "    var value name set as: ". $varValueName );
                 }
             }
 
             $output = $this->parent->extVars[ $varValueName ]->value;
+            //$this->_debug( $this->parent->extVars );
+            $this->_debug( "    output in parent ext var: " . $output );
             $output = ( is_numeric( $output ) ) ? $output : $this->parent->extVars[ $output ]->value;
-            return ( $output ) ? $output : GradleFile::NOT_LOADED;
+            $this->_debug( "    final output: " . $output );
+            return ( $output ) ? $output : self::NOT_LOADED;
         }
         else{
-            return GradleFile::NOT_LOADED;
+            return self::NOT_LOADED;
         }
     }
 
-    private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $lastGradleFile ){
+    private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex ){
         $property = PARAM_TO_TRACK;
         if( !$this->loaded || sizeof( $this->commits ) <= 1 ){ return; }
-        $middleIndex = $leftIndex + floor( ( $rightIndex - $leftIndex ) / 2 );
-        if( $middleIndex == sizeof( $this->commits ) - 2 ){ return; }
-
-        // echo "<pre>" . $leftIndex . " - " . $middleIndex . " - " . $rightIndex . " -- ";
+        $middleIndex = $leftIndex + ceil( ( $rightIndex - $leftIndex ) / 2 );
+        $leftDistance = $middleIndex - $leftIndex;
+        $rightDistance = $rightIndex - $middleIndex;
+        $minorDistance = min( $leftDistance, $rightDistance );
+        $majorDistance = max( $leftDistance, $rightDistance );
+        $this->_debug( "in: [$leftIndex,$middleIndex,$rightIndex] - [$leftDistance,$rightDistance,$minorDistance,$majorDistance]", "<hr>" );
+        
+        // load gradle file in the middle
         $commit = $this->commits[ $middleIndex ];
         $hash = $commit->hash;
         $repoEntity = clone( $baseGradleFile->repoEntity );
         $repoEntity->branch = $hash;
-        $gradleFile = GradleFile::factoryWithCommit( $repoEntity, $this->path, $this->parent ? true : false );
+        $middleGradleFile = GradleFile::factoryFromCommit( $repoEntity, $this->path, $this->parent ? true : false );
+        $this->_debug( $middleGradleFile->propertyValue . " middle -> base " . $baseGradleFile->propertyValue );
+        $this->_debug( "middle remote file: " . $middleGradleFile->remoteFile );
+        $this->_debug( "base remote file: " . $baseGradleFile->remoteFile );
 
-        if( $rightIndex <= $leftIndex || $middleIndex == $leftIndex ){
-            $oldValue = $lastGradleFile->propertyValue;
-            if( $oldValue ){
-                $this->propertyHistory[] = new PropertyHistoryEntity( $commit, $oldValue, $baseGradleFile->propertyValue );
+        if( $middleIndex == $rightIndex ){
+            if( $baseGradleFile->propertyValue != self::NOT_LOADED && 
+                $middleGradleFile->propertyValue != self::NOT_LOADED &&
+                $middleGradleFile->propertyValue != $baseGradleFile->propertyValue ){
+                $this->_debug( "CHANGE DETECTED: ". $middleGradleFile->propertyValue . " - " . $baseGradleFile->propertyValue );
+                $this->propertyHistory[] = new PropertyHistoryEntity( $commit, 
+                                                                      $middleGradleFile->propertyValue, 
+                                                                      $baseGradleFile->propertyValue );
+                $this->extractPropertyChangeHistory( $middleGradleFile, $leftIndex + 1, sizeof( $this->commits ) - 1 );
             }
-            $this->extractPropertyChangeHistory( $lastGradleFile, $leftIndex, sizeof( $this->commits ) - 1, $lastGradleFile );
             return;
         }
 
-        if( $baseGradleFile->propertyValue != $gradleFile->propertyValue ){
+        if( $baseGradleFile->propertyValue != self::NOT_LOADED && 
+            $middleGradleFile->propertyValue != self::NOT_LOADED &&
+            $middleGradleFile->propertyValue != $baseGradleFile->propertyValue ){
             $rightIndex = $middleIndex;
         }
         else{
             $leftIndex = $middleIndex;
         }
-        $this->extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex, $gradleFile );
+
+        return $this->extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex );
     }
 
     private function clearContent( &$content ){
         $content = str_replace( ' ', '', $content );
         $content = str_replace( '"', "'", $content );
+    }
+
+    private function _debug( $message, $before = "" ){
+        // if($this && $this->remoteFile != "https://raw.githubusercontent.com/PierfrancescoSoffritti/android-youtube-player/master/core/build.gradle"){
+        //     return;
+        // }
+        return;
+        echo $before;
+        echo "<pre>";
+        print_r( $message );
+        echo "</pre>"; 
     }
 }
