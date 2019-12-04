@@ -17,9 +17,8 @@ preg_match_all( $regexp, $otherProjects, $matches );
 if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	$projects = array_merge( $projects, $matches[ 0 ] );
 }
-
-$resultsObj = new Results( $projects, $granulatity );
-?>
+$projects = array_unique( $projects );
+$resultsObj = new Results( $projects, $granulatity );?>
 
 
 <html>
@@ -95,7 +94,7 @@ $resultsObj = new Results( $projects, $granulatity );
 						<hr />
 						<div class="row">
 							<div class="col-sm">
-								<label for="preTestedProjects">Pre tested projects</label>
+								<label for="preTestedProjects">Pre tested repositories</label>
 								<select multiple class="form-control" name="projects[]" size="10" id="preTestedProjects">
 									<?php
 									foreach( $reposOptions as $repo ){ 
@@ -109,8 +108,8 @@ $resultsObj = new Results( $projects, $granulatity );
 								</select>
 							</div>
 							<div class="col-sm">
-								<label for="otherProjects">Other projects</label>
-								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/proj:branch:folder ... separete each repository using breakline ... no spaces allowed"><?=$otherProjects;?></textarea>
+								<label for="otherProjects">Other repositories</label>
+								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/repository:branch:folder ... one repository per line ... no spaces allowed"><?=$otherProjects;?></textarea>
 							</div>
 						</div>
 						<hr />
@@ -143,7 +142,7 @@ $resultsObj = new Results( $projects, $granulatity );
 								<div class="form-check">
 								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityQuartely" value="quartely"
 								  		 <?=( $granulatity == "quartely" ? "checked" : "" );?>>
-								  <label class="form-check-label" for="granulatityQuartely">quartely</label>
+								  <label class="form-check-label" for="granulatityQuartely">quarterly</label>
 								</div>
 							</div>
 						</div>
@@ -202,30 +201,47 @@ $resultsObj = new Results( $projects, $granulatity );
 					</div>
 					<br />
 						
-					<div class="resultsTableHolder">
-						<table class="resultsTable table">
-							<thead>
-								<tr>
-									<th>API levels</th>
-									<?php foreach( $resultsObj->getResultsByPeriod() as $period => $results ){ ?>
-										<th><?=$period;?></th>
-									<?php } ?>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach( $resultsObj->getResultsByValue() as $value => $results ){ ?>
+					<div>
+						<div style="float:left; width: 5%;">
+							<table class="resultsTable table">
+								<thead>
 									<tr>
-									<td><?=$value;?></td>
-										<? foreach( $results as $result ){ ?>
-											<td class="<?=($result == 0) ? "light" : "";?>"
-												style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
-												<?=$result;?>
-											</td>
-										<? } ?>
+										<th>API levels</th>
 									</tr>
-								<?php } ?>
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									<?php foreach( $resultsObj->getResultsByValue() as $value => $results ){ ?>
+										<tr>
+											<td><?=$value;?></td>
+										</tr>
+									<?php } ?>
+								</tbody>
+							</table>
+						</div>
+						<div style="float:right; width: 95%;" class="resultsTableHolder">
+							<table class="resultsTable table">
+								<thead>
+									<tr>
+										<?php foreach( $resultsObj->getResultsByPeriod() as $period => $results ){ ?>
+											<th><?=$period;?></th>
+										<?php } ?>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach( $resultsObj->getResultsByValue() as $value => $results ){ ?>
+										<tr>
+											<? foreach( $results as $result ){ ?>
+												<td class="<?=($result == 0) ? "light" : "";?>"
+													style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
+													<?=$result;?>
+												</td>
+											<? } ?>
+										</tr>
+									<?php } ?>
+								</tbody>
+							</table>
+						</div>
+						
 					</div>
 
 					<? } ?>

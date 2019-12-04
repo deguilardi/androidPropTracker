@@ -15,10 +15,18 @@ table.resultsTable{
 table.resultsTable thead th{
     font-size: 0.5em;
     color: #333;
+    transform: rotate(-90deg);
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+    /*padding: 10px 10px;*/
 }
 table.resultsTable tbody td{
 	font-size: 0.6em;
     text-align: center;
+    /*padding: 0px 5px;*/
 }
 table.resultsTable tbody td.light{
     color: #ccc;
