@@ -28,7 +28,11 @@ class CacheableFile{
             $this->loaded = true;
         }
         else{
-            if( $this->loadRemote() ){
+            if( is_file( CacheableFile::DIR . "/" . $this->localErrorFile ) ){
+                // echo "<br>cached error";
+                $this->hasError = true;
+            }
+            else if( $this->loadRemote() ){
                 $this->loaded = true;
                 $this->saveLocal();
             }
