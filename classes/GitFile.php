@@ -12,7 +12,7 @@ class GitFile extends CacheableFile{
     public function __construct( $repoEntity, $path ){
         $this->repoEntity = $repoEntity;
         $this->path = $path;
-        parent::__construct( $this->repoEntity->getRawPathUrlForFile( $this->path ) );
+        parent::__construct( $this->repoEntity->getRawPathUrlForFile( $this->path ), $this->repoEntity->repo );
     }
 
     protected function loadCommits(){
@@ -22,7 +22,7 @@ class GitFile extends CacheableFile{
     }
 
     private function loadCommitsFromPage( $url ){
-        $commitsListFile = new CacheableFile( $url );
+        $commitsListFile = new CacheableFile( $url, $this->repoEntity->repo );
         $commitsListFile->load();
 
         if( !$commitsListFile->content ){

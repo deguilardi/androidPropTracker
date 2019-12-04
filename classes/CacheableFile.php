@@ -2,11 +2,12 @@
 class CacheableFile{
 
     private const DIR = "cached";
-    private const ERR_PREFIX = "_err/";
+    private const ERR_PREFIX = "__err/";
 
     public $id;
     protected $remoteFile;
     public $localFile;
+    private $localFolder;
     public $localErrorFile;
     public $content;
     public $loaded = false;
@@ -14,11 +15,12 @@ class CacheableFile{
     // @TODO check timestamp to reload
     // public $updateTimestamp; 
 
-    public function __construct( $remoteFile ){
+    public function __construct( $remoteFile, $localFolder ){
+        $this->localFolder = str_replace( array( "-", ".", "/" ), "_", $localFolder );
         $this->remoteFile = $remoteFile;
         $this->id = md5( $remoteFile );
-        $this->localFile = self::DIR . "/" . $this->id;
-        $this->localErrorFile = self::DIR . "/" . self::ERR_PREFIX . $this->id;
+        $this->localFile = $this->id;
+        $this->localErrorFile = self::ERR_PREFIX . $this->id;
     }
 
     public function load(){
@@ -34,7 +36,7 @@ class CacheableFile{
                 // echo "<br> error!";
                 $this->hasError = true;
                 $this->initCacheDir();
-                $file = fopen( $this->localErrorFile, "w" ) or die( "Unable to open file!" );
+                $file = fopen( CacheableFile::DIR . "/" . $this->localErrorFile, "w" ) or die( "Unable to open file!" );
                 fwrite( $file, $this->content );
                 fclose( $file );
             }
@@ -46,8 +48,8 @@ class CacheableFile{
     }
 
     protected function loadLocal(){
-        if( ENABLE_CACHE && is_file( $this->localFile ) ){
-            $this->content = file_get_contents( $this->localFile );
+        if( ENABLE_CACHE && is_file( $this->getFullLocalPath() ) ){
+            $this->content = file_get_contents( $this->getFullLocalPath() );
             return ( $this->content ) ? true : false;
         }
         else if( is_file( $this->localErrorFile ) ){
@@ -62,7 +64,7 @@ class CacheableFile{
     protected function saveLocal(){
         if( ENABLE_CACHE && $this->content ){
             $this->initCacheDir();
-            $file = fopen( $this->localFile, "w" ) or die( "Unable to open file!" );
+            $file = fopen( $this->getFullLocalPath(), "w" ) or die( "Unable to open file!" );
             fwrite( $file, $this->content );
             fclose( $file );
         }
@@ -77,9 +79,18 @@ class CacheableFile{
     }
 
     private function initCacheDir(){
-        if( ENABLE_CACHE && !is_dir( CacheableFile::DIR ) ){
-            mkdir( CacheableFile::DIR );
-            mkdir( CacheableFile::DIR . "/" . CacheableFile::ERR_PREFIX );
+        if( ENABLE_CACHE ){
+            if( !is_dir( CacheableFile::DIR ) ){
+                mkdir( CacheableFile::DIR );
+                mkdir( CacheableFile::DIR . "/" . CacheableFile::ERR_PREFIX );
+            }
+            if( !is_dir( CacheableFile::DIR . "/" . $this->localFolder ) ){
+                mkdir( CacheableFile::DIR . "/" . $this->localFolder );
+            }
         }
+    }
+
+    private function getFullLocalPath(){
+        return CacheableFile::DIR . "/" . $this->localFolder ."/". $this->localFile;
     }
 }

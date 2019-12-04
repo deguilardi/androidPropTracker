@@ -1,7 +1,7 @@
 <?php
 class RepositoryCache{
 	
-    private const DIR = "cached/_results";
+    private const DIR = "cached/__results";
 
     public static function factoryResultsWithRepoEntity( $repoEntity ){
         $localFile = self::getFilePath( $repoEntity );
