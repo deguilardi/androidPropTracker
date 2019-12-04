@@ -57,10 +57,12 @@ class GitFile extends CacheableFile{
 
         // check for other pages
         $pagesContainersElem = $repoContentElem->childNodes->item( 5 );
-        $nextPageElem = $pagesContainersElem->childNodes->item( 1 )->childNodes->item( 1 );
-        $href = $nextPageElem->getAttribute( "href" );
-        if( $href ){
-            $this->loadCommitsFromPage( $href );
+        if( $pagesContainersElem ){
+            $nextPageElem = $pagesContainersElem->childNodes->item( 1 )->childNodes->item( 1 );
+            $href = $nextPageElem->getAttribute( "href" );
+            if( $href ){
+                $this->loadCommitsFromPage( $href );
+            } 
         }
     }
 
@@ -76,5 +78,25 @@ class GitFile extends CacheableFile{
         $regexp = "/(repo:[0-9]{1,}:commit:)(([a-zA-Z0-9]{1,}))/";
         preg_match_all( $regexp, $info, $matches, PREG_OFFSET_CAPTURE );
         return $matches[ 3 ][ 0 ][ 0 ];
+    }
+
+    protected function mergeCommits( $otherCommits ){
+        $output = array();
+        for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
+            for( $ii = 0; $ii < sizeof( $otherCommits ); $ii++ ){
+                if( $this->commits[ $i ]->isBeforeThan( $otherCommits[ $ii ] ) ){
+                    $output[] = array_shift( $this->commits );
+                    $i--;
+                    continue 2;
+                }
+                else if( $this->commits[ $i ]->hash == $otherCommits[ $ii ]->hash ){
+                    array_shift( $otherCommits );
+                }
+                else{
+                    $output[] = array_shift( $otherCommits );
+                }
+            }
+        }
+        $this->commits = array_merge( $output, $this->commits );
     }
 }
