@@ -8,6 +8,8 @@ class Repository{
     public $rootGradle;
     public $modulesGradle = array();
     public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
+    public $areRealProjectsInFolders = false;
+    public $realProjectsFolders = array();
 
     public function __construct( $repoEntity ){
         $cache = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
@@ -26,8 +28,19 @@ class Repository{
         foreach( $moduleNames as $moduleName ){
             $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
         }
+
+        // no modules defined, will use "app" as default
         if( sizeof( $this->modulesGradle ) == 0 ){
             $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, "app" . "/build.gradle", $this->rootGradle );
+
+            // the only module added wasn't loaded
+            // the probable cause is the main gradle file is in a folder
+            if( $this->modulesGradle[0]->hasError ){
+                $folders = $this->extractFolders();
+                $this->areRealProjectsInFolders = sizeof( $folders ) > 0;
+                $this->realProjectsFolders = $folders;
+                return;
+            }
         }
 
         foreach( $this->modulesGradle as $moduleGradle ){
@@ -114,4 +127,40 @@ class Repository{
 
         return $modules;
     }
+
+    private function extractFolders(){
+        $url = $this->repoEntity->getRootUrl();
+        $projectRootFile = new CacheableFile( $url, $this->repoEntity->repo );
+        $projectRootFile->load();
+
+        if( !$projectRootFile->content ){
+            return;
+        }
+
+        $htmlDoc = new DOMDocument();
+        libxml_use_internal_errors( true );
+        $htmlDoc->loadHTML( $projectRootFile->content );
+        $htmlElem = $htmlDoc->childNodes->item( 1 );
+        $bodyElem = $htmlElem->childNodes->item( 3 );
+        $appElem = $bodyElem->childNodes->item( 7 );
+        $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
+        $repoContentElem = $mainElem->childNodes->item( 3 )->childNodes->item( 1 );
+        $fileWrap = $repoContentElem->childNodes->item( 13 );
+        $tableBody = $fileWrap->childNodes->item( 3 )->childNodes->item( 3 );
+
+        $output = array();
+        foreach( $tableBody->childNodes as $item ){
+            if( $item->nodeType != XML_ELEMENT_NODE || $item->getAttribute("class") != "js-navigation-item" ){ continue; }
+            $icon = $item->childNodes->item( 1 )->childNodes->item( 1 );
+            if( $icon->getAttribute( "aria-label" ) != "directory" ){
+                continue;
+            }
+
+            $content = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 )->wholeText;
+            if( $content ){
+                $output[] = $content;
+            }
+        }
+        return $output;
+    } 
 }

@@ -10,6 +10,10 @@ class RepositoryEntity{
         $this->folder = $folder;
     }
 
+    public function getRootUrl(){
+        return GIT_URL_BASE . $this->repo;
+    }
+
     public function getRawPathUrlForFile( $file ){
         return GIT_RAW_CODE_URL_BASE . $this->repo
                                      . "/" . $this->branch

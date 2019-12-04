@@ -11,7 +11,7 @@ class CacheableFile{
     public $localErrorFile;
     public $content;
     public $loaded = false;
-    protected $hasError = false;
+    public $hasError = false;
     // @TODO check timestamp to reload
     // public $updateTimestamp; 
 

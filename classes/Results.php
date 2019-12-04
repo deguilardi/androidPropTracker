@@ -10,15 +10,31 @@ class Results{
 	private $max = 0;
 	public $reposWithNoChangesDetected = array();
 	public $reposWithChangesDetected = array();
+	public $numRepositories;
+	public $numProjects;
 
 	public function __construct( $projects, $granulatity ){
 		if( @sizeof( $projects) ){
 			$this->hasProjects = true;
 			$repos = array();
 			foreach( $projects as $project ){
+				$this->numRepositories++;
 				$parts = explode( ":", $project );
 				$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
-				$repos[] = new Repository( $repoEntity );
+				$repository = new Repository( $repoEntity );
+
+				if( $repository->areRealProjectsInFolders ){
+	                foreach( $repository->realProjectsFolders as $folder ){
+	                    $innerRepoEntity = clone( $repoEntity );
+	                    $innerRepoEntity->folder = $folder;
+	                    $repos[] = new Repository( $innerRepoEntity );
+	                    $this->numProjects++;
+	                }
+				}
+				else{
+					$repos[] = $repository;
+					$this->numProjects++;
+				}
 			}
 
 			// determine min and max months

@@ -18,7 +18,8 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	$projects = array_merge( $projects, $matches[ 0 ] );
 }
 $projects = array_unique( $projects );
-$resultsObj = new Results( $projects, $granulatity );?>
+$resultsObj = new Results( $projects, $granulatity );
+?>
 
 
 <html>
@@ -168,6 +169,8 @@ $resultsObj = new Results( $projects, $granulatity );?>
 						<div class="card-body">
 							<strong>Tracking property: </strong><?=$propToTrack;?>
 							<br /><strong>Granulatity: </strong><?=$granulatity;?>
+							<br /><strong># repositories: </strong><?=$resultsObj->numRepositories;?>
+							<br /><strong># projects: </strong><?=$resultsObj->numProjects;?>
 							<br />
 
 							<div class="container-fluid">
