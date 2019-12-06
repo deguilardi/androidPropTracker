@@ -3,6 +3,8 @@ define( 'GIT_URL_BASE', 'https://github.com' );
 define( 'GIT_RAW_CODE_URL_BASE', 'https://raw.githubusercontent.com' );
 define( 'GIT_BRANCH_DEFAULT', 'master' );
 define( 'ENABLE_CACHE', true );
+define( 'ENABLE_CACHE_RESULTS', false );
+define( 'ENABLE_IGNORING_NAMES', true );
 
 $reposOptions = array(
 
@@ -72,4 +74,80 @@ $resultHeatColors = array(
 	"160,160,255",
 	"130,130,255",
 	"100,100,255"
+);
+
+$ignoredRepositoriesNames = array( 
+
+    // known frameworks
+    "react",
+    // "frameworks_av", 
+    // "flutter",
+    // "reactjs",
+    // "react-native",
+    // "reactnative",
+    // "kotlin",
+    // "xamarin",
+    // "cordova",
+
+    // // educational and tests
+    // "hello_world",
+    // "hello-world",
+    // "learning", 
+    // "class",
+    // "practice",
+    // "test",
+    // "sample",
+    // "hackathon",
+    // "research",
+    // "course",
+    // "udacity",
+    // "development",
+
+    // // core stuff
+    // // "android_frameworks_base", "platform_frameworks_base", etc...
+    // // "android_packages_apps_", "platform_packages_apps_", etc...
+    // "frameworks_base",
+    // "fameworks_base",
+    // "framework_base",
+    // "frameworks-base",
+    // "frameworks_support",
+    // "frameworks-support",
+    // "framework_support",
+    // "frameworks_rs",
+    // "packages_apps_",
+    // "packages-apps-",
+    // "platform-frameworks",
+    // "platform_frameworks",
+    // "android_platform",
+    // "android_frameworks",
+    // "android_packages",
+    // "platform_packages",
+    // "packages_inputmethods",
+    // "platform_art", "platform-art",
+    // "android_art",
+    // "selinux",
+    // "signal-android",
+    // "signal_android",
+    // "signalandroid",
+    // "platform_libcore",
+    // "androidaccessibility",
+    // "android-accessibility",
+
+    // // the core Android SELinux policy configuration
+    // "system_sepolicy",
+    // "system-sepolicy",
+
+    // // an operating system
+    // "fuchsia",
+
+    // // Skia is a complete 2D graphic library for drawing Text
+    // "skia",
+    // "skqp",
+
+    // // investigate
+    // // /Blaze-AOSP/system_netd
+    // "system_netd",
+    // "godot",
+    // "opencamera",
+    // "tensorflow"
 );

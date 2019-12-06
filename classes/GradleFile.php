@@ -15,6 +15,14 @@ class GradleFile extends GitFile{
         parent::__construct( $repoEntity, $file );
         $this->parent = $parent;
         $this->load();
+
+        // some projects have kts suffix
+        if( $this->hasError && $file == "build.gradle" ){
+            $file .= ".kts";
+            parent::__construct( $repoEntity, $file );
+            $this->load();
+        }
+
         if( $isLastVersion ){
             $this->loadCommits();
         }
@@ -162,6 +170,10 @@ class GradleFile extends GitFile{
         preg_match_all( $regexp, $content, $matches );
         if( sizeof( $matches ) && sizeof( $matches[ 3 ] ) > 0 ){
             foreach( $matches[ 1 ] as $k => $varName ){
+                if( strpos( $varName, "ext." ) === 0 ){
+                    $varName2 = str_replace( "ext.", "", $varName );
+                    $this->extVars[ $varName2 ] = new ExtVarEntity( $varName2, $matches[ 3 ][ $k ] );
+                }
                 $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ] );
             }
         }
@@ -210,10 +222,11 @@ class GradleFile extends GitFile{
 
         // property is explicit
         $matches = array();
-        $regexp = "/($property)([a-zA-Z0-9\.\_]{0,})/";
+        $regexp = "/($property)([\(]{0,})([a-zA-Z0-9\.\_]{0,})/";
         preg_match($regexp, $content, $matches, PREG_OFFSET_CAPTURE);
-        if( sizeof( $matches ) >= 3 ){
-            $value = $matches[ 2 ][ 0 ];
+        // $this->_debug( $matches );
+        if( sizeof( $matches ) == 4 ){
+            $value = $matches[ 3 ][ 0 ];
 
             // property points to root
             if( strpos( $value, "rootProject" ) === 0 ){
@@ -239,7 +252,7 @@ class GradleFile extends GitFile{
             }
 
             $output = $this->parent->extVars[ $varValueName ]->value;
-            //$this->_debug( $this->parent->extVars );
+            $this->_debug( $this->parent->extVars );
             $this->_debug( "    output in parent ext var: " . $output );
             $output = ( is_numeric( $output ) ) ? $output : $this->parent->extVars[ $output ]->value;
             $this->_debug( "    final output: " . $output );
@@ -301,7 +314,7 @@ class GradleFile extends GitFile{
     }
 
     private function _debug( $message, $before = "" ){
-        // if($this && $this->remoteFile != "https://raw.githubusercontent.com/PierfrancescoSoffritti/android-youtube-player/master/core/build.gradle"){
+        // if($this && $this->remoteFile != "https://raw.githubusercontent.com/tateisu/SubwayTooter/master/app/build.gradle"){
         //     return;
         // }
         return;

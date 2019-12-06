@@ -4,21 +4,41 @@ include "RepositoryCache.php";
 include "config.inc";
 
 class Repository{
+
+    public const NONE = -1;
+    public const PROJECT_DETECTED = 1;
+    public const PROJECT_DETECTED_IN_FOLDER = 2;
+    public const NO_PROJECT_DETECTED = 3;
+    public const IGNORED = 4;
+
     public $repoEntity;
     public $rootGradle;
     public $modulesGradle = array();
     public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
-    public $areRealProjectsInFolders = false;
-    public $realProjectsFolders = array();
+    public $state = Repository::NONE;
+    public $folders = array();
 
     public function __construct( $repoEntity ){
-        $cache = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
-        if( $cache ){
-            $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
-            $this->propertyChanges = $cache[ "propertyChanges" ];
+        global $ignoredRepositoriesNames;
 
-            // @todo extract other propertyes if needed
-            return;
+        // ignore some repositories with some strings in their names
+        foreach( $ignoredRepositoriesNames as $ignoredName ){
+            if( strpos( strtolower( $repoEntity->repo ), $ignoredName ) !== false ){
+                $this->state = Repository::IGNORED;
+                $this->repoEntity = $repoEntity;
+                return;
+            }
+        }
+
+        if( ENABLE_CACHE_RESULTS ){
+            $cache = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
+            if( $cache ){
+                $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
+                $this->propertyChanges = $cache[ "propertyChanges" ];
+
+                // @todo extract other propertyes if needed
+                return;
+            }
         }
 
         $this->repoEntity = $repoEntity;
@@ -35,12 +55,18 @@ class Repository{
 
             // the only module added wasn't loaded
             // the probable cause is the main gradle file is in a folder
-            if( $this->modulesGradle[0]->hasError ){
+            if( $this->modulesGradle[ 0 ]->hasError && !$this->repoEntity->folder ){
                 $folders = $this->extractFolders();
-                $this->areRealProjectsInFolders = sizeof( $folders ) > 0;
-                $this->realProjectsFolders = $folders;
-                return;
+                $this->state = sizeof( $folders ) > 0 ? Repository::PROJECT_DETECTED_IN_FOLDER : Repository::NO_PROJECT_DETECTED;
+                $this->folders = $folders;
             }
+            else{
+                $this->state = Repository::NO_PROJECT_DETECTED;
+            }
+            return;
+        }
+        else{
+            $this->state = Repository::PROJECT_DETECTED;
         }
 
         foreach( $this->modulesGradle as $moduleGradle ){
@@ -70,7 +96,6 @@ class Repository{
         ksort( $this->propertyChanges[ "quartely" ] );
         ksort( $this->propertyChanges[ "monthly" ] );
         ksort( $this->propertyChanges[ "daily" ] );
-
         RepositoryCache::save( $this );
     }
 
@@ -132,9 +157,10 @@ class Repository{
         $url = $this->repoEntity->getRootUrl();
         $projectRootFile = new CacheableFile( $url, $this->repoEntity->repo );
         $projectRootFile->load();
+        $output = array();
 
         if( !$projectRootFile->content ){
-            return;
+            return $output;
         }
 
         $htmlDoc = new DOMDocument();
@@ -145,20 +171,32 @@ class Repository{
         $appElem = $bodyElem->childNodes->item( 7 );
         $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
         $repoContentElem = $mainElem->childNodes->item( 3 )->childNodes->item( 1 );
-        $fileWrap = $repoContentElem->childNodes->item( 13 );
-        $tableBody = $fileWrap->childNodes->item( 3 )->childNodes->item( 3 );
+        // $branchInfo = $repoContentElem->childNodes->item( 11 );
 
-        $output = array();
-        foreach( $tableBody->childNodes as $item ){
-            if( $item->nodeType != XML_ELEMENT_NODE || $item->getAttribute("class") != "js-navigation-item" ){ continue; }
-            $icon = $item->childNodes->item( 1 )->childNodes->item( 1 );
-            if( $icon->getAttribute( "aria-label" ) != "directory" ){
-                continue;
+        // find the child tag, there are many different patterns
+        foreach( $repoContentElem->childNodes as $item ){
+            if( $item->nodeType == XML_ELEMENT_NODE && $item->getAttribute( "class" ) == "file-wrap" ){
+                $fileWrap = $item;
+                break;
             }
+        }
 
-            $content = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 )->wholeText;
-            if( $content ){
-                $output[] = $content;
+        // echo "<pre>";print_r($fileWrap->getAttribute("class"));echo "</pre>";
+        if( $fileWrap ){
+            $tableBody = $fileWrap->childNodes->item( 3 )->childNodes->item( 3 );
+            if( $tableBody ){
+                foreach( $tableBody->childNodes as $item ){
+                    if( $item->nodeType != XML_ELEMENT_NODE || $item->getAttribute("class") != "js-navigation-item" ){ continue; }
+                    $icon = $item->childNodes->item( 1 )->childNodes->item( 1 );
+                    if( $icon->getAttribute( "aria-label" ) != "directory" ){
+                        continue;
+                    }
+
+                    $content = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 )->wholeText;
+                    if( $content ){
+                        $output[] = $content;
+                    }
+                }
             }
         }
         return $output;

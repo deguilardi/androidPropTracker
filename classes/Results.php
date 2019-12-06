@@ -10,30 +10,49 @@ class Results{
 	private $max = 0;
 	public $reposWithNoChangesDetected = array();
 	public $reposWithChangesDetected = array();
-	public $numRepositories;
-	public $numProjects;
+	public $reposWithNoProjectsDetected = array();
+	public $reposIgnored = array();
+	public $numRepositories = 0;
+	public $numProjects = 0;
 
 	public function __construct( $projects, $granulatity ){
 		if( @sizeof( $projects) ){
 			$this->hasProjects = true;
 			$repos = array();
 			foreach( $projects as $project ){
+				$projecDetected = true;
 				$this->numRepositories++;
 				$parts = explode( ":", $project );
 				$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
 				$repository = new Repository( $repoEntity );
 
-				if( $repository->areRealProjectsInFolders ){
-	                foreach( $repository->realProjectsFolders as $folder ){
+				if( $repository->state == Repository::PROJECT_DETECTED_IN_FOLDER ){
+	                foreach( $repository->folders as $folder ){
 	                    $innerRepoEntity = clone( $repoEntity );
 	                    $innerRepoEntity->folder = $folder;
-	                    $repos[] = new Repository( $innerRepoEntity );
-	                    $this->numProjects++;
+	                    $innerRepository = new Repository( $innerRepoEntity );
+	                    if( $innerRepository->state == Repository::PROJECT_DETECTED ){
+	                    	$repos[] = $innerRepository;
+	                    	$this->numProjects++;
+	                    }
+	                    else{
+	                    	$projecDetected = false;
+	                    }
 	                }
+				}
+				elseif( $repository->state == Repository::IGNORED ){
+					$this->reposIgnored[] = $repository;
+				}
+				elseif( $repository->state == Repository::NO_PROJECT_DETECTED ){
+					$this->reposWithNoProjectsDetected[] = $repository;
 				}
 				else{
 					$repos[] = $repository;
 					$this->numProjects++;
+				}
+
+				if( !$projecDetected ){
+					$this->reposWithNoProjectsDetected[] = $repository;
 				}
 			}
 

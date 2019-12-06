@@ -1,7 +1,6 @@
 <?php
 set_time_limit( 0 );
 
-include "keys.inc";
 include "classes/Results.php";
 
 $projects = $_POST[ "projects" ] ? $_POST[ "projects" ] : array();
@@ -169,31 +168,53 @@ $resultsObj = new Results( $projects, $granulatity );
 						<div class="card-body">
 							<strong>Tracking property: </strong><?=$propToTrack;?>
 							<br /><strong>Granulatity: </strong><?=$granulatity;?>
-							<br /><strong># repositories: </strong><?=$resultsObj->numRepositories;?>
-							<br /><strong># projects: </strong><?=$resultsObj->numProjects;?>
+							<br /><strong># entered repositories: </strong><?=$resultsObj->numRepositories;?>
+							<br /><strong># ignored repositories: </strong><?=sizeof( $resultsObj->reposIgnored );?>
+							<br /><strong># detected projects: </strong><?=$resultsObj->numProjects;?>
+							<br /><strong># detected projects with changes: </strong><?=sizeof( $resultsObj->reposWithChangesDetected );?>
 							<br />
 
 							<div class="container-fluid">
 								<div class="row">
 									<div class="col-sm">
-										<br /><strong>Results for projects: </strong> <?=sizeof( $projects );?>
+										<br /><strong>All repositories: </strong> <?=sizeof( $projects );?>
 										<br />
 										<textarea class="form-control"><?=implode( "\n", $projects );?></textarea>
+									</div>
+									<div class="col-sm">
+										<br /><strong>Repositories ignored: </strong><?=sizeof( $resultsObj->reposIgnored );?>
+										<br />
+										<textarea class="form-control"><?php
+											foreach( $resultsObj->reposIgnored as $repo ){
+												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
+											}
+										?></textarea>
+									</div>
+									<div class="col-sm">
+										<br /><strong>Repositories with no projects detected: </strong><?=sizeof( $resultsObj->reposWithNoProjectsDetected );?>
+										<br />
+										<textarea class="form-control"><?php
+											foreach( $resultsObj->reposWithNoProjectsDetected as $repo ){
+												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
+											}
+										?></textarea>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm">
+										<br /><strong>Projects with no changes detected: </strong><?=sizeof( $resultsObj->reposWithNoChangesDetected );?>
+										<br />
+										<textarea class="form-control"><?php
+											foreach( $resultsObj->reposWithNoChangesDetected as $repo ){
+												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
+											}
+										?></textarea>
 									</div>
 									<div class="col-sm">
 										<br /><strong>Projects with changes detected: </strong><?=sizeof( $resultsObj->reposWithChangesDetected );?>
 										<br />
 										<textarea class="form-control"><?php
 											foreach( $resultsObj->reposWithChangesDetected as $repo ){
-												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
-											}
-										?></textarea>
-									</div>
-									<div class="col-sm">
-										<br /><strong>Projects with no changes detected: </strong><?=sizeof( $resultsObj->reposWithNoChangesDetected );?>
-										<br />
-										<textarea class="form-control"><?php
-											foreach( $resultsObj->reposWithNoChangesDetected as $repo ){
 												echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
 											}
 										?></textarea>
