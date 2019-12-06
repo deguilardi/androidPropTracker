@@ -318,12 +318,9 @@ class GradleFile extends GitFile{
     }
 
     private function _debug( $message, $before = "" ){
-        // if($this && $this->remoteFile != "https://raw.githubusercontent.com/tateisu/SubwayTooter/master/app/build.gradle"){
-        //     return;
-        // }
-        return;
-        echo $before;
-        echo "<pre>";
+        if( !DEBUG_GRADLE_FILE ){ return; }
+        if( DEBUG_GRADLE_FILE_REMOTE_ADDR && $this->remoteFile != DEBUG_GRADLE_FILE_REMOTE_ADDR ){ return; }
+        echo $before . "<pre>";
         print_r( $message );
         echo "</pre>"; 
     }
