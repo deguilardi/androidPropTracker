@@ -81,6 +81,7 @@ class GitFile extends CacheableFile{
     }
 
     protected function mergeCommits( $otherCommits ){
+        if( !$otherCommits ){ return; }
         $output = array();
         for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
             for( $ii = 0; $ii < sizeof( $otherCommits ); $ii++ ){

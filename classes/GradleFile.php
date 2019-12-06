@@ -10,6 +10,7 @@ class GradleFile extends GitFile{
     public $propertyValue = self::NOT_LOADED;
     public $propertyHistory = array();
     public $extVars = array();
+    public $isApplicationFile = false;
 
     protected function __construct( $repoEntity, $file, $parent, $isLastVersion ){
         parent::__construct( $repoEntity, $file );
@@ -26,7 +27,7 @@ class GradleFile extends GitFile{
         if( $isLastVersion ){
             $this->loadCommits();
         }
-        $this->initialParse( $this->content );
+        $this->initialParse();
         $this->clear();
     }
 
@@ -59,14 +60,13 @@ class GradleFile extends GitFile{
         return $gradleFile;
     }
 
-    private function initialParse( $content ){//echo "<br><br>initial parse<br><br><br>";
+    private function initialParse(){
         if( !$this->content ){
             return;
         }
         $content = $this->content;
         $this->clearContent( $content );
-        // @TODO this doesn't need to be called every time!
-        // to test, a project that needs it is: facebook/fresco
+        $this->checkRootAndModuleAtSameTime( $content );
         $this->loadGradleDotPropertiesFile();
         $this->concatExternalFiles( $content );
         $this->loadExtVars( $content );
@@ -306,6 +306,10 @@ class GradleFile extends GitFile{
         }
 
         return $this->extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex );
+    }
+
+    private function checkRootAndModuleAtSameTime( &$content ){
+        $this->isApplicationFile = ( strpos( $content, "applyplugin:'com.android.application'" ) !== false );
     }
 
     private function clearContent( &$content ){

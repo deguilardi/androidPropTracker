@@ -44,9 +44,18 @@ class Repository{
         $this->repoEntity = $repoEntity;
         $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
 
-        $moduleNames = $this->loadModuleNames();
-        foreach( $moduleNames as $moduleName ){
-            $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
+        // root can also be the main module file
+        // which means there is no modules
+        // in this case the module file is just like the root one
+        // but with no parent
+        if( $this->rootGradle->isApplicationFile ){
+            $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, "/build.gradle", null );
+        }
+        else{
+            $moduleNames = $this->loadModuleNames();
+            foreach( $moduleNames as $moduleName ){
+                $this->modulesGradle[] = GradleFile::factoryModuleLastVersion( $this->repoEntity, $moduleName . "/build.gradle", $this->rootGradle );
+            }
         }
 
         // no modules defined, will use "app" as default
