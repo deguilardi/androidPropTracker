@@ -41,7 +41,11 @@ class Repository{
             }
         }
 
+
         $this->repoEntity = $repoEntity;
+        if( !$this->repoEntity->branc ){
+            $this->repoEntity->branch = $this->extractDefaultBranch();
+        }
         $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
 
         // root can also be the main module file
@@ -162,35 +166,20 @@ class Repository{
         return $modules;
     }
 
+    private function extractDefaultBranch(){
+        $fileNavigation = $this->getMainProjectGitPageElementWithClass( "file-navigation in-mid-page d-flex flex-items-start" );
+        if( $fileNavigation ){
+            return $fileNavigation->childNodes->item( 1 )->childNodes->item( 1 )->childNodes->item( 3 )->childNodes->item( 0 )->wholeText;
+            
+        }
+        else{
+            return null;
+        }
+    }
+
     private function extractFolders(){
-        $url = $this->repoEntity->getRootUrl();
-        $projectRootFile = new CacheableFile( $url, $this->repoEntity->repo );
-        $projectRootFile->load();
         $output = array();
-
-        if( !$projectRootFile->content ){
-            return $output;
-        }
-
-        $htmlDoc = new DOMDocument();
-        libxml_use_internal_errors( true );
-        $htmlDoc->loadHTML( $projectRootFile->content );
-        $htmlElem = $htmlDoc->childNodes->item( 1 );
-        $bodyElem = $htmlElem->childNodes->item( 3 );
-        $appElem = $bodyElem->childNodes->item( 7 );
-        $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
-        $repoContentElem = $mainElem->childNodes->item( 3 )->childNodes->item( 1 );
-        // $branchInfo = $repoContentElem->childNodes->item( 11 );
-
-        // find the child tag, there are many different patterns
-        foreach( $repoContentElem->childNodes as $item ){
-            if( $item->nodeType == XML_ELEMENT_NODE && $item->getAttribute( "class" ) == "file-wrap" ){
-                $fileWrap = $item;
-                break;
-            }
-        }
-
-        // echo "<pre>";print_r($fileWrap->getAttribute("class"));echo "</pre>";
+        $fileWrap = $this->getMainProjectGitPageElementWithClass( "file-wrap" );
         if( $fileWrap ){
             $tableBody = $fileWrap->childNodes->item( 3 )->childNodes->item( 3 );
             if( $tableBody ){
@@ -210,4 +199,37 @@ class Repository{
         }
         return $output;
     } 
+
+    private function getMainProjectGitPageElementWithClass( $class ){
+        $url = $this->repoEntity->getRootUrl();
+        $projectRootFile = new CacheableFile( $url, $this->repoEntity->repo );
+        $projectRootFile->load();
+
+        if( !$projectRootFile->content ){
+            return false;
+        }
+
+        $htmlDoc = new DOMDocument();
+        libxml_use_internal_errors( true );
+        $htmlDoc->loadHTML( $projectRootFile->content );
+        $htmlElem = $htmlDoc->childNodes->item( 1 );
+        $bodyElem = $htmlElem->childNodes->item( 3 );
+        $appElem = $bodyElem->childNodes->item( 7 );
+        $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
+
+        // this element can be in many different positions
+        foreach( $mainElem->childNodes as $item ){
+            if( $item->nodeType == XML_ELEMENT_NODE && strpos( $item->getAttribute( "class" ), "container") !== false ){
+                $containerElem = $item;break;
+            }
+        }
+
+        $repoContentElem = $containerElem->childNodes->item( 1 );
+        foreach( $repoContentElem->childNodes as $item ){
+            if( $item->nodeType == XML_ELEMENT_NODE && $item->getAttribute( "class" ) == $class ){
+                break;
+            }
+        }                
+        return $item;
+    }
 }

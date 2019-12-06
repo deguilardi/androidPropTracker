@@ -11,7 +11,7 @@ define( 'PARAM_TO_TRACK', $propToTrack );
 // extract other projects field
 $otherProjects = $_POST[ "otherProjects" ];
 $matches = array();
-$regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0,})/";
+$regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0,}\:[a-zA-Z0-9\_\.\-]{0,})/";
 preg_match_all( $regexp, $otherProjects, $matches );
 if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	$projects = array_merge( $projects, $matches[ 0 ] );

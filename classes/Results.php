@@ -47,12 +47,13 @@ class Results{
 					$this->reposWithNoProjectsDetected[] = $repository;
 				}
 				else{
-					$repos[] = $repository;
-					$this->numProjects++;
-				}
-
-				if( !$projecDetected ){
-					$this->reposWithNoProjectsDetected[] = $repository;
+					if( $projecDetected ){
+						$repos[] = $repository;
+						$this->numProjects++;
+					}
+					else{
+						$this->reposWithNoProjectsDetected[] = $repository;
+					}
 				}
 			}
 
