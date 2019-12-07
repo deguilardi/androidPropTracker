@@ -91,15 +91,15 @@ $ignoredRepositoriesNames = array(
     // // educational and tests
     // "hello_world",
     // "hello-world",
-    // "learning", 
+    "learning", 
     // "class",
     // "practice",
-    // "test",
-    // "sample",
+    "test",
+    "sample",
     // "hackathon",
     // "research",
     // "course",
-    // "udacity",
+    "udacity",
     // "development",
 
     // // core stuff
