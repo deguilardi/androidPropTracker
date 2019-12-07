@@ -129,7 +129,9 @@ class GradleFile extends GitFile{
             preg_match_all( $regexp, $sectionContent, $matches, PREG_OFFSET_CAPTURE );
             foreach( $matches[ 1 ] as $k => $var ){
                 $varName = $var[ 0 ];
-                $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
+                if( !$this->extVars[ $varName ] ){
+                    $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
+                }
             }
         }
 
@@ -177,6 +179,8 @@ class GradleFile extends GitFile{
                 $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ] );
             }
         }
+        
+        $this->_debug( $this->extVars );
     }
 
     private function parseSection( $section, $content ){
@@ -222,9 +226,10 @@ class GradleFile extends GitFile{
 
         // property is explicit
         $matches = array();
-        $regexp = "/($property)([\(]{0,})([a-zA-Z0-9\.\_]{0,})/";
+        $regexp = "/($property)([\(\=]{0,})([a-zA-Z0-9\.\_]{0,})/";
         preg_match($regexp, $content, $matches, PREG_OFFSET_CAPTURE);
         // $this->_debug( $matches );
+        // $this->_debug( $content );
         if( sizeof( $matches ) == 4 ){
             $value = $matches[ 3 ][ 0 ];
 
@@ -242,7 +247,7 @@ class GradleFile extends GitFile{
             }
             else{
                 if( is_numeric( $value ) ){
-                    $this->_debug( "    property found: numeric in file" );
+                    $this->_debug( "    property found: numeric in file ".$value );
                     return $value;
                 }
                 else{
@@ -252,7 +257,6 @@ class GradleFile extends GitFile{
             }
 
             $output = $this->parent->extVars[ $varValueName ]->value;
-            $this->_debug( $this->parent->extVars );
             $this->_debug( "    output in parent ext var: " . $output );
             $output = ( is_numeric( $output ) ) ? $output : $this->parent->extVars[ $output ]->value;
             $this->_debug( "    final output: " . $output );
