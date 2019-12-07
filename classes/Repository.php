@@ -20,6 +20,7 @@ class Repository{
 
     public function __construct( $repoEntity ){
         global $ignoredRepositoriesNames;
+        $this->repoEntity = $repoEntity;
 
         // ignore some repositories with some strings in their names
         if( ENABLE_IGNORING_NAMES ){
@@ -32,22 +33,23 @@ class Repository{
             }
         }
 
+        // extract main branch
+        if( !$this->repoEntity->branch ){
+            $this->repoEntity->branch = $this->extractDefaultBranch();
+        }
+        $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
+
+        // load cache
         if( ENABLE_CACHE_RESULTS ){
-            $cache = RepositoryCache::factoryResultsWithRepoEntity( $repoEntity );
+            $cache = RepositoryCache::factoryResultsWithRepoEntity( $this->repoEntity );
             if( $cache ){
                 $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
                 $this->propertyChanges = $cache[ "propertyChanges" ];
                 $this->state = $cache[ "state" ];
+                $this->folders = $cache[ "folders" ];
                 return;
             }
         }
-
-
-        $this->repoEntity = $repoEntity;
-        if( !$this->repoEntity->branc ){
-            $this->repoEntity->branch = $this->extractDefaultBranch();
-        }
-        $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
 
         // root can also be the main module file
         // which means there is no modules
@@ -77,6 +79,7 @@ class Repository{
             else{
                 $this->state = Repository::NO_PROJECT_DETECTED;
             }
+            RepositoryCache::save( $this );
             return;
         }
         else{
