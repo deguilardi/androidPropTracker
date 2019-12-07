@@ -120,6 +120,17 @@ class Repository{
         $settingsFile = new GitFile( $this->repoEntity, "settings.gradle" );
         $settingsFile->load();
 
+        // some projects have kts suffix
+        if( $settingsFile->hasError ){
+            $settingsFile = new GitFile( $this->repoEntity, "settings.gradle.kts" );
+            $settingsFile->load();
+        }
+
+        if( $settingsFile->hasError ){
+            return array();
+        }
+
+
         // apply some filters
         $content = $settingsFile->content;
         $content = str_replace( '"', "'", $content );
