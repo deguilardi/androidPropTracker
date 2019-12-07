@@ -40,7 +40,19 @@ table.resultsTable tbody td.light{
 .resultsGraph .separator{
     font-weight: bold;
 }
-.resultsGraph textarea{
+.resultsGraph .card-body{
+    padding-bottom: 10px;
+}
+.resultsGraph ul{
+    overflow: auto;
     font-size: 0.5em;
     height: 100px;
+    padding: 0 0 0 20px;
+    margin: 0 -20px;
+}
+.resultsGraph ul li{
+    text-align: left;
+}
+.resultsGraph ul li a{
+    color: #fff;
 }

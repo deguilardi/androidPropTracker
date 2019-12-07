@@ -17,9 +17,25 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	$repositories = array_merge( $repositories, $matches[ 0 ] );
 }
 $resultsObj = new Results( $repositories, $granulatity );
+
+
+function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null ){
+	$output = '
+	<div class="card '.$bgClass.' text-white">
+		<div class="card-header">' .$header. '</div>
+		<div class="card-body">
+		    <h5 class="card-title">' .$resultsCount. '</h5>
+		    <p class="card-text">' .$text. '</p>';
+	if( $repos != null ){
+		$output .= '<ul>';
+		foreach( $repos as $repo ){
+		    $output .= "<li><a href=\"https://github.com" .$repo->repoEntity->repo. "\" target=\"_blank\"> " .$repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder. "</a></li>";
+		}
+		$output .= '</ul>';
+	}
+	return $output. '</div></div>';
+}
 ?>
-
-
 <html>
 <head>
 	<title>Android Project Prop Tracker</title>
@@ -174,56 +190,48 @@ $resultsObj = new Results( $repositories, $granulatity );
 
 							<div class="resultsGraph">
 								<div class="row">
-									<div class="card bg-primary col-sm-2 text-white">
-										<div class="card-header">User input</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "all" );?></h5>
-										    <p class="card-text">All repositories</p>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "User input", 
+													 $resultsObj->getRepositoriesResultCount( "all" ), 
+													 "All repositories", 
+													 "bg-primary col-sm-3" );
+									?>
 									<div class="separator col-sm-1">
 										<br /><br /><br /><br /><br /><br />====>
 										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 									</div>
-									<div class="card bg-secondary col-sm-2 text-white">
-										<div class="card-header">Unique repositories</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "unique" );?></h5>
-										    <p class="card-text">After filters</p>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Unique repositories", 
+													 $resultsObj->getRepositoriesResultCount( "unique" ), 
+													 "After filters", 
+													 "bg-secondary col-sm-2" );
+									?>
 									<div class="separator col-sm-1">
 										<br /><br /><br /><br /><br /><br />====>
 										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 									</div>
-									<div class="card bg-secondary col-sm-2 text-white">
-										<div class="card-header">Repositories to analyse</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "unique" )
-											             - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" );?></h5>
-										    <p class="card-text">After pre-analyse</p>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Repositories to analyse", 
+													 $resultsObj->getRepositoriesResultCount( "unique" )
+											             - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
+													 "After pre-analyse", 
+													 "bg-secondary col-sm-2" );
+									?>
 									<div class="separator col-sm-1">
 										<br /><br /><br /><br /><br /><br />====>
 										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 									</div>
-									<div class="card bg-success col-sm-3 text-white">
-										<div class="card-header">Final</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "withChangesDetected" );?></h5>
-										    <p class="card-text">Repositories with <?$propToTrack;?> changes detected</p>
-										    <textarea class="form-control"><?php
-												foreach( $resultsObj->getRepositoriesResult( "withChangesDetected" ) as $repo ){
-													echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
-												}
-											?></textarea>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Final", 
+													 $resultsObj->getRepositoriesResultCount( "unique" ), 
+													 "Repositories with changes detected", 
+													 "bg-success col-sm-2",
+													 $resultsObj->getRepositoriesResult( "withChangesDetected" ) );
+									?>
 								</div>
 
 								<div class="row">
-									<div class="col-sm-2"></div>
+									<div class="col-sm-3"></div>
 									<div class="separator col-sm-1">||<br />||<br />||</div>
 									<div class="col-sm-2"></div>
 									<div class="separator col-sm-1">||<br />||<br />||</div>
@@ -232,63 +240,46 @@ $resultsObj = new Results( $repositories, $granulatity );
 								</div>
 								
 								<div class="row">
-									<div class="card bg-warning col-sm-2 text-white">
-										<div class="card-header">Filter names</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "ignored" );?></h5>
-										    <p class="card-text">
-										    	<?=implode(", ", $ignoredRepositoriesNames);?>
-										    </p>
-										    <textarea class="form-control"><?php
-												foreach( $resultsObj->getRepositoriesResult( "ignored" ) as $repo ){
-													echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
-												}
-											?></textarea>
-										</div>
-									</div>
+									<div class="col-sm-1"></div>
+									<?=
+									drawGraphResult( "Filter names", 
+													 $resultsObj->getRepositoriesResultCount( "ignored" ), 
+													 implode(", ", $ignoredRepositoriesNames), 
+													 "bg-warning col-sm-2",
+													 $resultsObj->getRepositoriesResult( "ignored" ) );
+									?>
 									<div class="separator col-sm-1">
 										||<br />||<br />||<br />||<br />||<br />
 										<====>
 									</div>
-									<div class="card bg-warning col-sm-2 text-white">
-										<div class="card-header">Filter duplicates</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "duplicated" );?></h5>
-										    <p class="card-text">Duplicated</p>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Filter duplicates", 
+													 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
+													 "Duplicated", 
+													 "bg-warning col-sm-2" );
+									?>
 									<div class="separator col-sm-1">
 										||<br />||<br />||<br />||<br />||<br />
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
-									<div class="card bg-warning col-sm-2 text-white">
-										<div class="card-header">Check project pattern</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "withNoProjectDetected" );?></h5>
-										    <p class="card-text">No android gradle detected</p>
-										    <textarea class="form-control"><?php
-												foreach( $resultsObj->getRepositoriesResult( "withNoProjectDetected" ) as $repo ){
-													echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
-												}
-											?></textarea>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Check project pattern", 
+													 $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
+													 "No android gradle detected", 
+													 "bg-warning col-sm-2",
+													 $resultsObj->getRepositoriesResult( "withNoProjectDetected" ) );
+									?>
 									<div class="separator col-sm-1">
 										||<br />||<br />||<br />||<br />||<br />
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
-									<div class="card bg-danger col-sm-3 text-white">
-										<div class="card-header">Final</div>
-										<div class="card-body">
-										    <h5 class="card-title"><?=$resultsObj->getRepositoriesResultCount( "withNoChangesDetected" );?></h5>
-										    <p class="card-text">No changes detected</p>
-										    <textarea class="form-control"><?php
-												foreach( $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) as $repo ){
-													echo $repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder . "\n";
-												}
-											?></textarea>
-										</div>
-									</div>
+									<?=
+									drawGraphResult( "Final", 
+													 $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" ), 
+													 "No changes detected", 
+													 "bg-danger col-sm-2",
+													 $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) );
+									?>
 								</div>
 							</div>
 
