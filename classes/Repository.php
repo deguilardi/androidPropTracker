@@ -37,8 +37,7 @@ class Repository{
             if( $cache ){
                 $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
                 $this->propertyChanges = $cache[ "propertyChanges" ];
-
-                // @todo extract other propertyes if needed
+                $this->state = $cache[ "state" ];
                 return;
             }
         }

@@ -194,7 +194,7 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 									drawGraphResult( "User input", 
 													 $resultsObj->getRepositoriesResultCount( "all" ), 
 													 "All repositories", 
-													 "bg-primary col-sm-3" );
+													 "bg-primary col-sm-2" );
 									?>
 									<div class="separator col-sm-1">
 										<br /><br /><br /><br /><br /><br />====>
@@ -202,7 +202,8 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 									</div>
 									<?=
 									drawGraphResult( "Unique repositories", 
-													 $resultsObj->getRepositoriesResultCount( "unique" ), 
+													 $resultsObj->getRepositoriesResultCount( "unique" )
+											             - $resultsObj->getRepositoriesResultCount( "ignored" ) , 
 													 "After filters", 
 													 "bg-secondary col-sm-2" );
 									?>
@@ -213,7 +214,8 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 									<?=
 									drawGraphResult( "Repositories to analyse", 
 													 $resultsObj->getRepositoriesResultCount( "unique" )
-											             - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
+											             - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" )
+											             - $resultsObj->getRepositoriesResultCount( "ignored" ), 
 													 "After pre-analyse", 
 													 "bg-secondary col-sm-2" );
 									?>
@@ -223,15 +225,15 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 									</div>
 									<?=
 									drawGraphResult( "Final", 
-													 $resultsObj->getRepositoriesResultCount( "unique" ), 
+													 $resultsObj->getRepositoriesResultCount( "withChangesDetected" ), 
 													 "Repositories with changes detected", 
-													 "bg-success col-sm-2",
+													 "bg-success col-sm-3",
 													 $resultsObj->getRepositoriesResult( "withChangesDetected" ) );
 									?>
 								</div>
 
 								<div class="row">
-									<div class="col-sm-3"></div>
+									<div class="col-sm-2"></div>
 									<div class="separator col-sm-1">||<br />||<br />||</div>
 									<div class="col-sm-2"></div>
 									<div class="separator col-sm-1">||<br />||<br />||</div>
@@ -240,23 +242,22 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 								</div>
 								
 								<div class="row">
-									<div class="col-sm-1"></div>
 									<?=
-									drawGraphResult( "Filter names", 
-													 $resultsObj->getRepositoriesResultCount( "ignored" ), 
-													 implode(", ", $ignoredRepositoriesNames), 
-													 "bg-warning col-sm-2",
-													 $resultsObj->getRepositoriesResult( "ignored" ) );
+									drawGraphResult( "Filter duplicates", 
+													 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
+													 "Duplicated", 
+													 "bg-warning col-sm-2" );
 									?>
 									<div class="separator col-sm-1">
 										||<br />||<br />||<br />||<br />||<br />
 										<====>
 									</div>
 									<?=
-									drawGraphResult( "Filter duplicates", 
-													 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
-													 "Duplicated", 
-													 "bg-warning col-sm-2" );
+									drawGraphResult( "Filter names", 
+													 $resultsObj->getRepositoriesResultCount( "ignored" ), 
+													 implode(", ", $ignoredRepositoriesNames), 
+													 "bg-warning col-sm-2",
+													 $resultsObj->getRepositoriesResult( "ignored" ) );
 									?>
 									<div class="separator col-sm-1">
 										||<br />||<br />||<br />||<br />||<br />
@@ -277,7 +278,7 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 									drawGraphResult( "Final", 
 													 $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" ), 
 													 "No changes detected", 
-													 "bg-danger col-sm-2",
+													 "bg-danger col-sm-3",
 													 $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) );
 									?>
 								</div>
