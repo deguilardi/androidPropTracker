@@ -8,137 +8,179 @@ class Results{
 	public $hasProjects = false;
 	public $hasResults = false;
 	private $max = 0;
-	public $reposWithNoChangesDetected = array();
-	public $reposWithChangesDetected = array();
-	public $reposWithNoProjectsDetected = array();
-	public $reposIgnored = array();
-	public $numRepositories = 0;
-	public $numProjects = 0;
 
-	public function __construct( $projects, $granulatity ){
-		if( @sizeof( $projects) ){
-			$this->hasProjects = true;
-			$repos = array();
-			foreach( $projects as $project ){
-				$projecDetected = true;
-				$this->numRepositories++;
-				$parts = explode( ":", $project );
-				$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
-				$repository = new Repository( $repoEntity );
+	private $repoCounts = array(
+		"all" => 0,
+		"duplicated" => 0,
+		"unique" => 0,
+		"ignored" => 0,
+		"withNoProjectDetected" => 0,
+		"willTryToDetectChanges" => 0,
+		"withNoChangesDetected" => 0,
+		"withChangesDetected" => 0,
+	);
 
-				if( $repository->state == Repository::PROJECT_DETECTED_IN_FOLDER ){
+	private $repoLists = array(
+		"ignored" => array(),
+		"withNoProjectDetected" => array(),
+		"withNoChangesDetected" => array(),
+		"withChangesDetected" => array(),
+	);
+
+	public function __construct( $repositories, $granulatity ){
+		if( !$repositories || !sizeof( $repositories) ){ return; };
+		$this->hasProjects = true;
+
+		// discard non repeated repositories
+		$this->setNumRepositories( "all", sizeof( $repositories ) );
+		$repositories = array_unique( $repositories );
+		$this->setNumRepositories( "unique", sizeof( $repositories ) );
+		$this->setNumRepositories( "duplicated", $this->repoCounts[ "all" ] - $this->repoCounts[ "unique" ] );
+
+
+		$repos = array();
+		foreach( $repositories as $item ){
+			$parts = explode( ":", $item );
+			$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
+			$repository = new Repository( $repoEntity );
+
+			// make different lists depending on each repository state
+			switch( $repository->state ){
+				case Repository::PROJECT_DETECTED_IN_FOLDER:
+					$projecDetectedInFolder = false;
 	                foreach( $repository->folders as $folder ){
 	                    $innerRepoEntity = clone( $repoEntity );
 	                    $innerRepoEntity->folder = $folder;
 	                    $innerRepository = new Repository( $innerRepoEntity );
 	                    if( $innerRepository->state == Repository::PROJECT_DETECTED ){
 	                    	$repos[] = $innerRepository;
-	                    	$this->numProjects++;
-	                    }
-	                    else{
-	                    	$projecDetected = false;
+	                    	$projecDetectedInFolder = true;
 	                    }
 	                }
-				}
-				elseif( $repository->state == Repository::IGNORED ){
-					$this->reposIgnored[] = $repository;
-				}
-				elseif( $repository->state == Repository::NO_PROJECT_DETECTED ){
-					$this->reposWithNoProjectsDetected[] = $repository;
-				}
-				else{
-					if( $projecDetected ){
-						$repos[] = $repository;
-						$this->numProjects++;
-					}
-					else{
-						$this->reposWithNoProjectsDetected[] = $repository;
-					}
-				}
+	                if( !$projecDetectedInFolder ){
+	            		$this->addResult( "withNoProjectDetected", $repository );
+	                }
+	                else{
+	            		$this->incrementNumRepositories( "willTryToDetectChanges" );
+	                }
+	                break;
+
+	            case Repository::IGNORED:
+	            	$this->addResult( "ignored", $repository );
+					break;
+
+				case Repository::NO_PROJECT_DETECTED:
+	            	$this->addResult( "withNoProjectDetected", $repository );
+					break;
+
+				default:
+	            	$this->incrementNumRepositories( "willTryToDetectChanges" );
+					$repos[] = $repository;
+					break;
 			}
+		}	
 
-			// determine min and max months
-			$minMonth = date( "Y-m" );
-			$maxMonth = "2006-01";
-			foreach( $repos as $repo ){
-				$repoMinMonth = array_key_first( $repo->propertyChanges[ "monthly" ] );
-				$minMonth = $repoMinMonth && $repoMinMonth < $minMonth
-				          ? $repoMinMonth
-				          : $minMonth;
-				$repoMaxMonth = array_key_last( $repo->propertyChanges[ "monthly" ] );
-				$maxMonth = $repoMaxMonth && $repoMaxMonth > $maxMonth
-				          ? $repoMaxMonth
-				          : $maxMonth;
-			}
-			$maxMonth = ( $maxMonth == "2006-01" ? $minMonth : $maxMonth );
+		// determine min and max months
+		$minMonth = date( "Y-m" );
+		$maxMonth = "2006-01";
+		foreach( $repos as $repo ){
+			$repoMinMonth = array_key_first( $repo->propertyChanges[ "monthly" ] );
+			$minMonth = $repoMinMonth && $repoMinMonth < $minMonth
+			          ? $repoMinMonth
+			          : $minMonth;
+			$repoMaxMonth = array_key_last( $repo->propertyChanges[ "monthly" ] );
+			$maxMonth = $repoMaxMonth && $repoMaxMonth > $maxMonth
+			          ? $repoMaxMonth
+			          : $maxMonth;
+		}
+		$maxMonth = ( $maxMonth == "2006-01" ? $minMonth : $maxMonth );
 
-			// determine diff in months
-			$datetimeMin = date_create( $minMonth . "-01" ); 
-			$datetimeMax = date_create( $maxMonth . "-01" );
-			$interval = date_diff( $datetimeMin, $datetimeMax );
-			$diffInMonths = $interval->format( '%y' ) * 12 + $interval->format( '%m' ) + 1;
+		// determine diff in months
+		$datetimeMin = date_create( $minMonth . "-01" ); 
+		$datetimeMax = date_create( $maxMonth . "-01" );
+		$interval = date_diff( $datetimeMin, $datetimeMax );
+		$diffInMonths = $interval->format( '%y' ) * 12 + $interval->format( '%m' ) + 1;
 
-			// init empty results array
-			$year = date_format( $datetimeMin, "Y" );
-			$month = date_format( $datetimeMin, "m" );
-			for( $i = 0; $i < $diffInMonths; $i++ ){
-				$key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
-				$key = $this->getPeriodWithGranulatity( $key, $granulatity );
-				$this->resultsByPeriod[ $key ] = array();
-				$month++;
-				if( $month > 12 ){
-					$month = 1;
-					$year++;
-				}
-			}
-
-			// distribute results into periods
-			foreach( $repos as $repo ){
-				foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
-					$numItems = sizeof( $changes );
-					foreach( $changes as $propValue => $change ){
-						if( $propValue == GradleFile::NOT_LOADED ){ continue; }
-						$this->resultsByPeriod[ $period ][ $propValue ] += $change;
-						$this->calculateMax( $this->resultsByPeriod[ $period ][ $propValue ] );
-					}
-				}
-			}
-
-			// results grouped by value
-			$this->resultsByValue = array();
-			foreach( $repos as $repo ){
-				foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
-					foreach( $changes as $propValue => $change ){
-						if( $propValue == GradleFile::NOT_LOADED ){ continue; }
-
-						// initialize with zeroes
-						if( !$this->resultsByValue[ $propValue ] ){
-							foreach( $this->resultsByPeriod as $key2 => $result ){
-								$this->resultsByValue[ $propValue ][ $key2 ] = 0;
-							}
-						}
-
-						$this->resultsByValue[ $propValue ][ $period ] += $change;
-					}
-				}
-			}
-
-			// has results?
-			foreach( $repos as $repo ){
-				if( sizeof( $repo->propertyChanges[ $granulatity ] ) ){
-					$this->reposWithChangesDetected[] = $repo;
-				}
-				else{
-					$this->reposWithNoChangesDetected[] = $repo;
-				}
-			}
-
-
-			if( sizeof($this->resultsByValue) ){
-				$this->hasResults = true;
-		    	ksort( $this->resultsByValue );
+		// init empty results array
+		$year = date_format( $datetimeMin, "Y" );
+		$month = date_format( $datetimeMin, "m" );
+		for( $i = 0; $i < $diffInMonths; $i++ ){
+			$key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
+			$key = $this->getPeriodWithGranulatity( $key, $granulatity );
+			$this->resultsByPeriod[ $key ] = array();
+			$month++;
+			if( $month > 12 ){
+				$month = 1;
+				$year++;
 			}
 		}
+
+		// distribute results into periods
+		foreach( $repos as $repo ){
+			foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
+				$numItems = sizeof( $changes );
+				foreach( $changes as $propValue => $change ){
+					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+					$this->resultsByPeriod[ $period ][ $propValue ] += $change;
+					$this->calculateMax( $this->resultsByPeriod[ $period ][ $propValue ] );
+				}
+			}
+		}
+
+		// results grouped by value
+		$this->resultsByValue = array();
+		foreach( $repos as $repo ){
+			foreach( $repo->propertyChanges[ $granulatity ] as $period => $changes ){
+				foreach( $changes as $propValue => $change ){
+					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+
+					// initialize with zeroes
+					if( !$this->resultsByValue[ $propValue ] ){
+						foreach( $this->resultsByPeriod as $key2 => $result ){
+							$this->resultsByValue[ $propValue ][ $key2 ] = 0;
+						}
+					}
+
+					$this->resultsByValue[ $propValue ][ $period ] += $change;
+				}
+			}
+		}
+
+		// has results?
+		foreach( $repos as $repo ){
+			if( sizeof( $repo->propertyChanges[ $granulatity ] ) ){
+	            $this->addResult( "withChangesDetected", $repo );
+			}
+			else{
+	            $this->addResult( "withNoChangesDetected", $repo );
+			}
+		}
+
+		if( sizeof($this->resultsByValue) ){
+			$this->hasResults = true;
+	    	ksort( $this->resultsByValue );
+		}
+	}
+
+	private function setNumRepositories( $key, $val ){
+		$this->repoCounts[ $key ] = $val;
+	}
+
+	private function incrementNumRepositories( $key ){
+		$this->repoCounts[ $key ]++;
+	}
+
+	private function addResult( $key, $repository ){
+		$this->incrementNumRepositories( $key );
+		$this->repoLists[ $key ][] = $repository;
+	}
+
+	public function getRepositoriesResultCount( $key ){
+		return $this->repoCounts[ $key ];
+	}
+
+	public function getRepositoriesResult( $key ){
+		return $this->repoLists[ $key ];
 	}
 
 	public function getResultsByPeriod(){

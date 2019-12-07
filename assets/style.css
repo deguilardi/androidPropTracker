@@ -31,3 +31,16 @@ table.resultsTable tbody td{
 table.resultsTable tbody td.light{
     color: #ccc;
 }
+
+.resultsGraph{
+    width: 100%;
+    text-align: center;
+    font-size: 0.8em;
+}
+.resultsGraph .separator{
+    font-weight: bold;
+}
+.resultsGraph textarea{
+    font-size: 0.5em;
+    height: 100px;
+}

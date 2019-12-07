@@ -81,15 +81,12 @@ $resultHeatColors = array(
 $ignoredRepositoriesNames = array( 
 
     // known frameworks
-    "react",
     // "frameworks_av", 
     // "flutter",
-    // "reactjs",
-    // "react-native",
-    // "reactnative",
+    "react",
     // "kotlin",
-    // "xamarin",
-    // "cordova",
+    "xamarin",
+    "cordova",
 
     // // educational and tests
     // "hello_world",

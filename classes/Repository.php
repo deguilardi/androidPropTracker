@@ -22,11 +22,13 @@ class Repository{
         global $ignoredRepositoriesNames;
 
         // ignore some repositories with some strings in their names
-        foreach( $ignoredRepositoriesNames as $ignoredName ){
-            if( strpos( strtolower( $repoEntity->repo ), $ignoredName ) !== false ){
-                $this->state = Repository::IGNORED;
-                $this->repoEntity = $repoEntity;
-                return;
+        if( ENABLE_IGNORING_NAMES ){
+            foreach( $ignoredRepositoriesNames as $ignoredName ){
+                if( strpos( strtolower( $repoEntity->repo ), $ignoredName ) !== false ){
+                    $this->state = Repository::IGNORED;
+                    $this->repoEntity = $repoEntity;
+                    return;
+                }
             }
         }
 
