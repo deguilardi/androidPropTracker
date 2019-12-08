@@ -3,9 +3,9 @@ define( 'GIT_URL_BASE', 'https://github.com' );
 define( 'GIT_RAW_CODE_URL_BASE', 'https://raw.githubusercontent.com' );
 define( 'GIT_BRANCH_DEFAULT', 'master' );
 define( 'ENABLE_CACHE', true );
-define( 'ENABLE_CACHE_RESULTS', true );
+define( 'ENABLE_CACHE_RESULTS', false );
 define( 'ENABLE_IGNORING_NAMES', true );
-define( 'DEBUG_GRADLE_FILE', false );
+define( 'DEBUG_GRADLE_FILE', true );
 define( 'DEBUG_GRADLE_FILE_REMOTE_ADDR', null ); // ex: https://raw.githubusercontent.com/tateisu/SubwayTooter/master/app/build.gradle"
 
 $reposOptions = array(
@@ -67,7 +67,14 @@ $resultGraphColors = array(
 	"0,0,155",
 	"155,155,0",
 	"155,0,155",
-	"0,155,155"
+	"0,155,155",
+
+    "255,0,0",
+    "0,255,0",
+    "0,0,255",
+    "255,255,0",
+    "255,0,255",
+    "0,255,255",
 );
 
 $resultHeatColors = array(
