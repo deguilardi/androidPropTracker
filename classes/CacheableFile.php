@@ -16,6 +16,8 @@ class CacheableFile{
     // public $updateTimestamp; 
 
     public function __construct( $remoteFile, $localFolder ){
+        $this->loaded = false;
+        $this->hasError = false;
         $this->localFolder = str_replace( array( "-", ".", "/" ), "_", $localFolder );
         $this->remoteFile = $remoteFile;
         $this->id = md5( $remoteFile );

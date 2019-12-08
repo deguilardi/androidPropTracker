@@ -76,6 +76,9 @@ class Repository{
                 $this->state = sizeof( $folders ) > 0 ? Repository::PROJECT_DETECTED_IN_FOLDER : Repository::NO_PROJECT_DETECTED;
                 $this->folders = $folders;
             }
+            else if( !$this->modulesGradle[ 0 ]->hasError ){
+                $this->state = Repository::PROJECT_DETECTED;
+            }
             else{
                 $this->state = Repository::NO_PROJECT_DETECTED;
             }
