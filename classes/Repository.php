@@ -123,10 +123,18 @@ class Repository{
         ksort( $this->propertyChangesContinuous );
         ksort( $finalValues );
 
-        // fill the remaining gaps
+        // find the very last period
         $lastPeriod = array_key_last( $this->propertyChangesContinuous );
         if( $lastPeriod ){
-            $lastPeriod = $this->incrementPeriod( array_key_last( $this->propertyChangesContinuous ) );
+            foreach( $finalValues as $finalValue ){
+                if( $finalValue->commit->isAfterThanWithString( $lastPeriod ) ){
+                    $lastPeriod = $finalValue->commit->date[ "year" ] . "-" . str_pad( $finalValue->commit->date[ "month" ], 2, '0', STR_PAD_LEFT );
+                }
+            }
+        }
+
+        // fill the remaining gaps
+        if( $lastPeriod ){
             foreach( $finalValues as $finalValue ){
                 $period = $finalValue->getFormatedDate( $this->granularity );
                 $this->fillResultsGap( $this->propertyChangesContinuous, $finalValue->newValue, $period, $lastPeriod );

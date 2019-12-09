@@ -10,15 +10,26 @@ class CommitEntity{
 
     public function isAfterThan( $otherCommit ){
     	$compDate = $otherCommit->date;
-		if( $this->date[ "year" ] > $compDate[ "year" ] ){
+    	return $this->_isAfterThanWithSeparatedComponents( $compDate[ "year" ], $compDate[ "month" ], $day );
+    }
+
+    public function isAfterThanWithString( $compare ){
+    	$year = substr( $compare, 0, 4 );
+    	$month = substr( $compare, 5 );
+    	$day = 1;
+    	return $this->_isAfterThanWithSeparatedComponents( $year, $month, $day );
+    }
+
+    private function _isAfterThanWithSeparatedComponents( $year, $month, $day ){
+		if( $this->date[ "year" ] > $year ){
 			return true;
 		}
-		else if( $this->date[ "year" ] == $compDate[ "year" ] ){
-			if( $this->date[ "month" ] > $compDate[ "month" ] ){
+		else if( $this->date[ "year" ] == $year ){
+			if( $this->date[ "month" ] > $month ){
 				return true;
 			}
-			else if( $this->date[ "month" ] == $compDate[ "month" ] &&
-			    $this->date[ "day" ] > $compDate[ "day" ] ){
+			else if( $this->date[ "month" ] == $month &&
+			    $this->date[ "day" ] > $day ){
 				return true;
 			}
 		}
