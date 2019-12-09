@@ -92,9 +92,11 @@ class GitFile extends CacheableFile{
                 }
                 else if( $this->commits[ $i ]->hash == $otherCommits[ $ii ]->hash ){
                     array_shift( $otherCommits );
+                    $ii--;
                 }
                 else{
                     $output[] = array_shift( $otherCommits );
+                    $ii--;
                 }
             }
         }
