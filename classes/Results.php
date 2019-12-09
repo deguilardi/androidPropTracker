@@ -123,6 +123,7 @@ class Results{
 				$numItems = sizeof( $changes );
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+                	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 					$this->resultsByPeriod[ $period ][ $propValue ] += $change;
 					$this->calculateMax( $this->resultsByPeriod[ $period ][ $propValue ] );
 				}
@@ -135,6 +136,7 @@ class Results{
 			foreach( $repo->propertyChanges as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+                	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 
 					// initialize with zeroes
 					if( !$this->resultsByValue[ $propValue ] ){
@@ -148,32 +150,11 @@ class Results{
 			}
 		}
 
-		// continuous results
-		// foreach( $repos as $repo ){
-		// 	foreach( $repo->propertyChangesContinuous as $period => $changes ){
-		// 		foreach( $changes as $propValue => $change ){
-		// 			if( $propValue == GradleFile::NOT_LOADED ){ continue; }
-		// 			$this->resultsContinuous[ $period ][ $propValue ] += $change;
-		// 		}
-		// 	}
-		// 	$lastPeriod = array_key_last( $repo->propertyChangesContinuous );
-		// 	if( $lastPeriod !== false && is_array( $repo->propertyChangesContinuous[ $lastPeriod ] ) ){
-		// 		foreach( $repo->propertyChangesContinuous[ $lastPeriod ] as $propValue => $change ){
-		// 			$this->fillResultsGap( 
-		// 				$this->resultsContinuous, 
-		// 				$propValue, 
-		// 				$change, 
-		// 				$lastPeriod, 
-		// 				$maxMonth
-		// 			);
-		// 		}
-		// 	}
-		// }
-
 		foreach( $repos as $repo ){
 			foreach( $repo->propertyChangesContinuous as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
+                	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 
 					// initialize with zeroes
 					if( !$this->resultsContinuous[ $propValue ] ){

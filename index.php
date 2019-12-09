@@ -1,13 +1,17 @@
 <?php
 set_time_limit( 0 );
-ini_set( "memory_limit", "256M" );
+ini_set( "memory_limit", "1024M" );
 
 include "classes/Results.php";
 
 $repositories = $_POST[ "repositories" ] ? $_POST[ "repositories" ] : array();
 $granulatity = $_POST[ "granulatity" ];
 $propToTrack = $_POST[ "propToTrack" ];
+$rangeMin = $_POST[ "rangeMin" ];
+$rangeMax = $_POST[ "rangeMax" ];
 define( 'PARAM_TO_TRACK', $propToTrack );
+define( 'RANGE_MIN', $rangeMin );
+define( 'RANGE_MAX', $rangeMax );
 
 // extract other repositories field
 $otherProjects = $_POST[ "otherProjects" ];
@@ -178,6 +182,22 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 								  <input class="form-check-input" type="radio" name="propToTrack" id="targetSdkVersion" value="targetSdkVersion"
 								  		 <?=( $propToTrack == "targetSdkVersion" || !$propToTrack ? "checked" : "" );?>>
 								  <label class="form-check-label" for="targetSdkVersion">targetSdkVersion</label>
+								</div>
+								<br />
+								Property range
+								<div class="form-row">
+									<div class="col-sm input-group input-group-sm">
+										<div class="input-group-prepend">
+										    <span class="input-group-text">min</span>
+										</div>
+									    <input class="form-control" type="text" name="rangeMin" id="rangeMin" value="<?=( $rangeMin ? $rangeMin : "21" );?>" />
+									</div>
+									<div class="col-sm input-group input-group-sm">
+										<div class="input-group-prepend">
+										    <span class="input-group-text">max</span>
+										</div>
+									    <input class="form-control" type="text" name="rangeMax" id="rangeMax" value="<?=( $rangeMax ? $rangeMax : "29" );?>" />
+									</div>
 								</div>
 							</div>
 							<div class="col-sm">
