@@ -10,7 +10,7 @@ class CommitEntity{
 
     public function isAfterThan( $otherCommit ){
     	$compDate = $otherCommit->date;
-    	return $this->_isAfterThanWithSeparatedComponents( $compDate[ "year" ], $compDate[ "month" ], $day );
+    	return $this->_isAfterThanWithSeparatedComponents( $compDate[ "year" ], $compDate[ "month" ], $compDate[ "day" ] );
     }
 
     public function isAfterThanWithString( $compare ){
