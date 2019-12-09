@@ -9,6 +9,7 @@ class Results{
 	public $hasProjects = false;
 	public $hasResults = false;
 	private $max = 0;
+	private $maxContinuous;
 
 	private $repoCounts = array(
 		"all" => 0,
@@ -164,6 +165,7 @@ class Results{
 					}
 
 					$this->resultsContinuous[ $propValue ][ $period ] += $change;
+					$this->calculateMax( $this->resultsContinuous[ $propValue ][ $period ] );
 				}
 			}
 
@@ -211,19 +213,6 @@ class Results{
             $i++;
         }
     }
-
-	// private function fillResultsGap( &$target, $propValue, $change, $ini, $end ){
-	// 	if( $ini == $end ){ return; }
- //        $key = $ini;
-	// 	$key = $this->incrementPeriod( $key );
-	// 	$end = $this->incrementPeriod( $end );
- //        $i = 0;
- //        while( $key != $end && $i < 100 ){
- //            $target[ $key ][ $propValue ] += $change;
- //            $key = $this->incrementPeriod( $key );
- //            $i++;
- //        }
- //    }
 
     private function incrementPeriod( $key ){
         $year = substr( $key, 0, 4 );
@@ -276,6 +265,11 @@ class Results{
 		return( $resultHeatColors[ $index ] );
 	}
 
+	public function getColorForValueContinuous( $value, $resultHeatColors ){
+		$index = ceil( $value / $this->maxContinuos * sizeof( $resultHeatColors ) ) - 1;
+		return( $resultHeatColors[ $index ] );
+	}
+
 	private function getPeriodWithGranularity( $value, $granularity ){
 		if( $granularity == "quartely" ){
 			$year = substr( $value, 0, 4 );
@@ -289,7 +283,11 @@ class Results{
 	}
 
 	private function calculateMax( $value ){
-		$this->max = ( $value > $this->max ) ? $value : $this->max;
+		$this->max = max( $value, $this->max );
+	}
+
+	private function calculateMaxContinuous( $value ){
+		$this->maxContinuous = max( $value, $this->maxContinuous );
 	}
 }
 ?>
