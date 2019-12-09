@@ -61,16 +61,18 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 
 	<!-- scripted -->
 	<script>
-	var lineChartData = {
-		labels: [
-			<?php
-			if( $resultsObj->hasResults ){
-				foreach( $resultsObj->getResultsByPeriod() as $period => $results ){
-					echo '"' . $period . '",';
-				}
+	var chartLabels = [
+		<?php
+		if( $resultsObj->hasResults ){
+			foreach( $resultsObj->getResultsByPeriod() as $period => $results ){
+				echo '"' . $period . '",';
 			}
-			?>
-		],
+		}
+		?>
+	];
+
+	var chartDataChanges = {
+		labels: chartLabels,
 		datasets: [
 			<?php
 			if( $resultsObj->hasResults ){
@@ -93,17 +95,8 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 		]
 	};
 	
-	var lineChartData2 = {
-		labels: [
-			<?php
-			if( $resultsObj->hasResults ){
-				foreach( $resultsObj->getResultsByPeriod() as $period => $results ){
-					echo '"' . $period . '",';
-				}
-			}
-			?>
-		],
-
+	var chartDataContinuous = {
+		labels: chartLabels,
 		datasets: [
 			<?php
 			if( $resultsObj->hasResults ){
@@ -111,7 +104,7 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 				foreach( $resultsObj->getResultsContinuous() as $value => $results ){
 					echo "{  label:'".$value."',
 					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
-					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\" ),
+					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\", 0.8 ),
 					         data:[";
 
 					foreach( $results as $result ){
@@ -123,8 +116,30 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 			}
 			?>
 		]
-		
-	}
+	};
+	
+	var chartDataContinuousStacked = {
+		labels: chartLabels,
+		datasets: [
+			<?php
+			if( $resultsObj->hasResults ){
+				$i = 0;
+				foreach( $resultsObj->getResultsContinuous() as $value => $results ){
+					echo "{  label:'".$value."',
+					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
+					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\", 0.2 ),
+					         data:[";
+
+					foreach( $results as $result ){
+						echo $result . ",";
+					}
+					echo "]},";
+					$i++;
+				}
+			}
+			?>
+		]
+	};
 	</script>
 
 </head>
@@ -431,7 +446,11 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 					</div>
 
 					<div style="width:98%; margin: 1%;">
-						<canvas id="canvasChart2"></canvas>
+						<canvas id="chartContinuous"></canvas>
+					</div>
+
+					<div style="width:98%; margin: 1%;">
+						<canvas id="chartContinuousStacked"></canvas>
 					</div>
 
 					<? } ?>

@@ -10,7 +10,7 @@ var transparentize= function(color, opacity) {
 $( document ).ready(function(){
 	var ctx = document.getElementById('canvasChart1').getContext('2d');
 	window.myLine = Chart.Line(ctx, {
-		data: lineChartData,
+		data: chartDataChanges,
 		options: {
 			responsive: true,
 			hoverMode: 'index',
@@ -31,33 +31,42 @@ $( document ).ready(function(){
 	});
 
 
-
-
-    var optionsArea = {
-		elements: {
-			line: {
-				tension: 0.000001
-			}
-		},
-		scales: {
-			yAxes: [{
-				stacked: true
-			}]
-		},
-		plugins: {
-			filler: {
-				propagate: false
-			},
-			'samples-filler-analyser': {
-				target: 'chart-analyser'
-			}
-		}
-    };
-
-	var chartArea = new Chart('canvasChart2', {
+	var chartContinuous = new Chart('chartContinuous', {
 		type: 'line',
-		data: lineChartData2,
-		options: optionsArea
+		data: chartDataContinuous,
+		options: {
+			title: {
+				display: true,
+				text: 'Apps versions x Time'
+			},
+			elements: {
+				line: {
+					tension: 0.000001
+				}
+			}
+	    }
+	});
+
+
+	var chartContinuousStacked = new Chart('chartContinuousStacked', {
+		type: 'line',
+		data: chartDataContinuousStacked,
+		options: {
+			title: {
+				display: true,
+				text: 'Apps versions x Time'
+			},
+			elements: {
+				line: {
+					tension: 0.000001
+				}
+			},
+			scales: {
+				yAxes: [{
+					stacked: true
+				}]
+			}
+	    }
 	});
 
 });
