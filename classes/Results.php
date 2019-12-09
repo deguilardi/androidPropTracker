@@ -170,6 +170,7 @@ class Results{
 			$lastPeriod = array_key_last( $repo->propertyChangesContinuous );
 			if( $lastPeriod !== false && is_array( $repo->propertyChangesContinuous[ $lastPeriod ] ) ){
 				foreach( $repo->propertyChangesContinuous[ $lastPeriod ] as $propValue => $change ){
+                	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 					$this->fillResultsGap( 
 						$this->resultsContinuous, 
 						$propValue, 

@@ -339,8 +339,8 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 
 						</div>
 					</div>
+					
 					<br />
-						
 					<div>
 						<div style="float:left; width: 5%;">
 							<table class="resultsTable table">
@@ -381,18 +381,60 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 								</tbody>
 							</table>
 						</div>
-						
 					</div>
-
-					<? } ?>
 
 					<div style="width:98%; margin: 1%;">
 						<canvas id="canvasChart1"></canvas>
+					</div>
+					
+					<br />
+					<div>
+						<div style="float:left; width: 5%;">
+							<table class="resultsTable table">
+								<thead>
+									<tr>
+										<th>API levels</th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach( $resultsObj->getResultsContinuous() as $value => $results ){ ?>
+										<tr>
+											<td><?=$value;?></td>
+										</tr>
+									<?php } ?>
+								</tbody>
+							</table>
+						</div>
+						<div style="float:right; width: 95%;" class="resultsTableHolder">
+							<table class="resultsTable table">
+								<thead>
+									<tr>
+										<?php foreach( $resultsObj->getResultsByPeriod() as $period => $results ){ ?>
+											<th><?=$period;?></th>
+										<?php } ?>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach( $resultsObj->getResultsContinuous() as $value => $results ){ ?>
+										<tr>
+											<? foreach( $results as $result ){ ?>
+												<td class="<?=($result == 0) ? "light" : "";?>"
+													style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
+													<?=$result;?>
+												</td>
+											<? } ?>
+										</tr>
+									<?php } ?>
+								</tbody>
+							</table>
+						</div>
 					</div>
 
 					<div style="width:98%; margin: 1%;">
 						<canvas id="canvasChart2"></canvas>
 					</div>
+
+					<? } ?>
 
 		    	</div>
 		    </div>
