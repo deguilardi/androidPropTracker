@@ -85,7 +85,7 @@ class GitFile extends CacheableFile{
         $output = array();
         for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
             for( $ii = 0; $ii < sizeof( $otherCommits ); $ii++ ){
-                if( $this->commits[ $i ]->isBeforeThan( $otherCommits[ $ii ] ) ){
+                if( $this->commits[ $i ]->isAfterThan( $otherCommits[ $ii ] ) ){
                     $output[] = array_shift( $this->commits );
                     $i--;
                     continue 2;

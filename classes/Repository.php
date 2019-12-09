@@ -14,13 +14,16 @@ class Repository{
     public $repoEntity;
     public $rootGradle;
     public $modulesGradle = array();
-    public $propertyChanges = array( "quartely" => array(), "monthly" => array(), "daily" => array() );
+    public $propertyChanges = array();
+    public $propertyChangesContinuous = array();
     public $state = Repository::NONE;
     public $folders = array();
+    private $granularity;
 
-    public function __construct( $repoEntity ){
+    public function __construct( $repoEntity, $granularity ){
         global $ignoredRepositoriesNames;
         $this->repoEntity = $repoEntity;
+        $this->granularity = $granularity;
 
         // ignore some repositories with some strings in their names
         if( ENABLE_IGNORING_NAMES ){
@@ -45,8 +48,10 @@ class Repository{
             if( $cache ){
                 $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
                 $this->propertyChanges = $cache[ "propertyChanges" ];
+                $this->propertyChangesContinuous = $cache[ "propertyChangesContinuous" ];
                 $this->state = $cache[ "state" ];
                 $this->folders = $cache[ "folders" ];
+                $this->granularity = $cache[ "granularity" ];
                 return;
             }
         }
@@ -89,34 +94,83 @@ class Repository{
             $this->state = Repository::PROJECT_DETECTED;
         }
 
+        $this->makePropertyChanges();
+        RepositoryCache::save( $this );
+    }
+
+    private function makePropertyChanges(){
+        $finalValues = array();
         foreach( $this->modulesGradle as $moduleGradle ){
             if( $moduleGradle->propertyHistory ){
+                $prevKey = null;
+                $prevValue = null;
                 foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
-                    $year = $targetSdkVersionChange->commit->date[ "year" ];
-                    $month = $targetSdkVersionChange->commit->date[ "month" ];
-
-                    // quartely
-                    $quarter = ceil( $month / 3 );
-                    $key = $year . "-q" . $quarter;
-                    $this->propertyChanges[ "quartely" ][ $key ][ $targetSdkVersionChange->newValue ]++;
-
-                    // monthly
-                    $paddedMonth = str_pad( $month, 2, '0', STR_PAD_LEFT );
-                    $key = $year . "-" . $paddedMonth;
-                    $this->propertyChanges[ "monthly" ][ $key ][ $targetSdkVersionChange->newValue ]++;
-
-                    // daily
-                    $paddedDay = str_pad( $targetSdkVersionChange->commit->date[ "day" ], 2, '0', STR_PAD_LEFT );
-                    $key .= "-" . $paddedDay;
-                    $this->propertyChanges[ "daily" ][ $key ][ $targetSdkVersionChange->newValue ]++;
+                    $key = $targetSdkVersionChange->getFormatedDate( $this->granularity );
+                    $this->propertyChanges[ $key ][ $targetSdkVersionChange->newValue ]++;
+                    if( !$prevKey ){
+                        $finalValues[] = $targetSdkVersionChange;
+                    }
+                    else{
+                        $this->fillResultsGap( $this->propertyChangesContinuous, $prevValue, $key, $prevKey );
+                    }
+                    $prevKey = $key;
+                    $prevValue = $targetSdkVersionChange->oldValue;
                 }
             }
         }
 
-        ksort( $this->propertyChanges[ "quartely" ] );
-        ksort( $this->propertyChanges[ "monthly" ] );
-        ksort( $this->propertyChanges[ "daily" ] );
-        RepositoryCache::save( $this );
+        ksort( $this->propertyChanges );
+        ksort( $this->propertyChangesContinuous );
+        ksort( $finalValues );
+
+        // fill the remaining gaps
+        $lastPeriod = array_key_last( $this->propertyChangesContinuous );
+        if( $lastPeriod ){
+            $lastPeriod = $this->incrementPeriod( array_key_last( $this->propertyChangesContinuous ) );
+            foreach( $finalValues as $finalValue ){
+                $period = $finalValue->getFormatedDate( $this->granularity );
+                $this->fillResultsGap( $this->propertyChangesContinuous, $finalValue->newValue, $period, $lastPeriod );
+                $this->propertyChangesContinuous[ $lastPeriod ][ $finalValue->newValue ]++;
+            }
+        }
+        else{
+            $this->propertyChangesContinuous = $this->propertyChanges;
+        }
+    }
+
+    private function fillResultsGap( &$target, $propValue, $ini, $end ){
+        $key = $ini;
+        $i = 0;
+        while( $key != $end && $i < 100 ){
+            $target[ $key ][ $propValue ]++;
+            $key = $this->incrementPeriod( $key );
+            $i++;
+        }
+    }
+
+    private function incrementPeriod( $key ){
+        $year = substr( $key, 0, 4 );
+        $month = substr( $key, 5, 2 );
+        $month++;
+        if( $month > 12 ){
+            $month = 1;
+            $year++;
+        }
+        $key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
+        $key = $this->getPeriodWithGranularity( $key, $granularity );
+        return $key;
+    }
+
+    private function getPeriodWithGranularity( $value, $granularity ){
+        if( $granularity == "quartely" ){
+            $year = substr( $value, 0, 4 );
+            $month = (int) substr( $value, -2 );
+            $quarter = ceil( $month / 3 );
+            return $year . "-q" . $quarter;
+        }
+        else{
+            return $value;
+        }
     }
 
     private function loadModuleNames(){

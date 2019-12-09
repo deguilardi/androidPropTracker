@@ -8,17 +8,17 @@ class CommitEntity{
         $this->hash = $hash;
     }
 
-    public function isBeforeThan( $otherCommit ){
+    public function isAfterThan( $otherCommit ){
     	$compDate = $otherCommit->date;
-		if( $this->date[ "year" ] < $compDate[ "year" ] ){
+		if( $this->date[ "year" ] > $compDate[ "year" ] ){
 			return true;
 		}
 		else if( $this->date[ "year" ] == $compDate[ "year" ] ){
-			if( $this->date[ "month" ] < $compDate[ "month" ] ){
+			if( $this->date[ "month" ] > $compDate[ "month" ] ){
 				return true;
 			}
 			else if( $this->date[ "month" ] == $compDate[ "month" ] &&
-			     $this->date[ "day" ] < $compDate[ "day" ] ){
+			    $this->date[ "day" ] > $compDate[ "day" ] ){
 				return true;
 			}
 		}

@@ -88,11 +88,43 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 			?>
 		]
 	};
+	
+	var lineChartData2 = {
+		labels: [
+			<?php
+			if( $resultsObj->hasResults ){
+				foreach( $resultsObj->getResultsByPeriod() as $period => $results ){
+					echo '"' . $period . '",';
+				}
+			}
+			?>
+		],
+
+		datasets: [
+			<?php
+			if( $resultsObj->hasResults ){
+				$i = 0;
+				foreach( $resultsObj->getResultsContinuous() as $value => $results ){
+					echo "{  label:'".$value."',
+					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
+					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\" ),
+					         data:[";
+
+					foreach( $results as $result ){
+						echo $result . ",";
+					}
+					echo "]},";
+					$i++;
+				}
+			}
+			?>
+		]
+		
+	}
 	</script>
 
 </head>
 <body>
-
 <div class="container-fluid">
 	<h1>Android Project Prop Tracker</h1>
 
@@ -335,7 +367,11 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 					<? } ?>
 
 					<div style="width:98%; margin: 1%;">
-						<canvas id="canvas"></canvas>
+						<canvas id="canvasChart1"></canvas>
+					</div>
+
+					<div style="width:98%; margin: 1%;">
+						<canvas id="canvasChart2"></canvas>
 					</div>
 
 		    	</div>
