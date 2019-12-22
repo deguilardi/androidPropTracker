@@ -77,11 +77,13 @@ var Results = {
 			Results.drawTableResults( 
 				$( "#tableResultsByValueLabels" ), 
 				$( "#tableResultsByValueValues" ),
-				Results.finalResults.resultsByValue );
+				Results.finalResults.resultsByValue,
+				Results.finalResults.max );
 			Results.drawTableResults( 
 				$( "#tableResultsContinuousLabels" ), 
 				$( "#tableResultsContinuousValues" ),
-				Results.finalResults.resultsContinuous );
+				Results.finalResults.resultsContinuous,
+				Results.finalResults.maxContinuous );
 			Results.drawGraphs();
 		});
 	},
@@ -187,7 +189,7 @@ var Results = {
 		target.html( output );
 	},
 
-	drawTableResults : function( targetLabels, targetValues, valuesValues ){
+	drawTableResults : function( targetLabels, targetValues, valuesValues, max ){
 
 		// labels
 		var labels = "";
@@ -207,7 +209,7 @@ var Results = {
 			values += "<tr>";
 			for( var date in results ){
 				var result = results[ date ];
-				var colorForValue = Results.getColorForValue( result );
+				var colorForValue = Results.getColorForValue( result, max );
 				values += "<td class=\"" + ( (result == 0) ? "light" : "" ) + "\"";
 				values += "style=\"background-color:rgb(" + colorForValue + ")\">";
 				values += result;
@@ -357,8 +359,8 @@ var Results = {
 		return Results.finalResults[ "repoLists" ][ key ];
 	},
 
-	getColorForValue : function( value ){
-		var index = Math.ceil( value / Results.finalResults.max * resultHeatColors.length ) - 1;
+	getColorForValue : function( value, max ){
+		var index = Math.ceil( value / max * resultHeatColors.length ) - 1;
 		return( resultHeatColors[ index ] );
 	}
 };
