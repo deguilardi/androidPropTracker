@@ -9,9 +9,6 @@ $granulatity = $_POST[ "granulatity" ];
 $propToTrack = $_POST[ "propToTrack" ];
 $rangeMin = $_POST[ "rangeMin" ];
 $rangeMax = $_POST[ "rangeMax" ];
-define( 'PARAM_TO_TRACK', $propToTrack );
-define( 'RANGE_MIN', $rangeMin );
-define( 'RANGE_MAX', $rangeMax );
 
 // extract other repositories field
 $otherProjects = $_POST[ "otherProjects" ];
@@ -20,25 +17,6 @@ $regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0
 preg_match_all( $regexp, $otherProjects, $matches );
 if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	$repositories = array_merge( $repositories, $matches[ 0 ] );
-}
-$resultsObj = new Results( $repositories, $granulatity );
-
-
-function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null ){
-	$output = '
-	<div class="card '.$bgClass.' text-white">
-		<div class="card-header">' .$header. '</div>
-		<div class="card-body">
-		    <h5 class="card-title">' .$resultsCount. '</h5>
-		    <p class="card-text">' .$text. '</p>';
-	if( $repos != null ){
-		$output .= '<ul>';
-		foreach( $repos as $repo ){
-		    $output .= "<li><a href=\"https://github.com" .$repo->repoEntity->repo. "\" target=\"_blank\"> " .$repo->repoEntity->repo . ":" . $repo->repoEntity->branch . ":" . $repo->repoEntity->folder. "</a></li>";
-		}
-		$output .= '</ul>';
-	}
-	return $output. '</div></div>';
 }
 ?>
 <html>
@@ -61,85 +39,21 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 
 	<!-- scripted -->
 	<script>
-	var chartLabels = [
+
+	var resultGraphColors = ["<?=implode( "\",\"" , $resultGraphColors );?>"];
+
+	var resultHeatColors = ["<?=implode( "\",\"" , $resultHeatColors );?>"];
+
+	var ignoredRepositoriesNames = ["<?=implode( "\",\"" , $ignoredRepositoriesNames );?>"];
+
+	$( document ).ready(function(){
 		<?php
-		if( $resultsObj->hasResults ){
-			foreach( $resultsObj->getResultsByPeriod() as $period => $results ){
-				echo '"' . $period . '",';
-			}
-		}
-		?>
-	];
-
-	var chartDataChanges = {
-		labels: chartLabels,
-		datasets: [
-			<?php
-			if( $resultsObj->hasResults ){
-				$i = 0;
-				foreach( $resultsObj->getResultsByValue() as $value => $results ){
-					echo "{  label:'".$value."',
-					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
-					         backgroundColor: \"rgb(".$resultGraphColors[ $i ].")\",
-					         fill:false,
-					         data:[";
-
-					foreach( $results as $result ){
-						echo ( $result ? $result : "null" ) . ",";
-					}
-					echo "]},";
-					$i++;
-				}
-			}
-			?>
-		]
-	};
-	
-	var chartDataContinuous = {
-		labels: chartLabels,
-		datasets: [
-			<?php
-			if( $resultsObj->hasResults ){
-				$i = 0;
-				foreach( $resultsObj->getResultsContinuous() as $value => $results ){
-					echo "{  label:'".$value."',
-					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
-					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\", 0.8 ),
-					         data:[";
-
-					foreach( $results as $result ){
-						echo $result . ",";
-					}
-					echo "]},";
-					$i++;
-				}
-			}
-			?>
-		]
-	};
-	
-	var chartDataContinuousStacked = {
-		labels: chartLabels,
-		datasets: [
-			<?php
-			if( $resultsObj->hasResults ){
-				$i = 0;
-				foreach( $resultsObj->getResultsContinuous() as $value => $results ){
-					echo "{  label:'".$value."',
-					         borderColor: \"rgb(".$resultGraphColors[ $i ].")\",
-					         backgroundColor: transparentize( \"rgb(".$resultGraphColors[ $i ].")\", 0.2 ),
-					         data:[";
-
-					foreach( $results as $result ){
-						echo $result . ",";
-					}
-					echo "]},";
-					$i++;
-				}
-			}
-			?>
-		]
-	};
+		if( sizeof( $repositories ) ){
+			echo "Results.init( ".sizeof( $repositories ).", \"".$granulatity."\", ".$rangeMin.", ".$rangeMax." );";
+			foreach( $repositories as $repository ){ ?>
+				Results.inspectRepository( "<?=$repository;?>", "<?=$propToTrack;?>" );
+		<?php } } ?>
+	});
 	</script>
 
 </head>
@@ -154,7 +68,7 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 					<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Form</button>
 				</h2>
 			</div>
-			<div id="collapseOne" class="collapse <?=( $resultsObj->hasProjects ) ? "" : "show";?>" aria-labelledby="headingOne" data-parent="#accordionExample">
+			<div id="collapseOne" class="collapse <?=( sizeof( $repositories ) ) ? "" : "show";?>" aria-labelledby="headingOne" data-parent="#accordionExample">
 				<div class="card-body">
 
 					<form method="post">
@@ -239,13 +153,24 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 	  	<div class="card">
 		    <div class="card-header" id="headingTwo">
 			    <h2 class="mb-0">
-			        <button class="btn btn-link collapsed <?=( $resultsObj->hasProjects ) ? "" : "disabled";?>" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Results</button>
+			        <button class="btn btn-link collapsed <?=( sizeof( $repositories ) ) ? "" : "disabled";?>" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Results</button>
 			    </h2>
 		    </div>
-		    <div id="collapseTwo" class="collapse <?=( $resultsObj->hasProjects ) ? "show" : "";?>" aria-labelledby="headingTwo" data-parent="#accordionExample">
-		    	<div class="card-body">
+		    <div id="collapseTwo" class="collapse <?=( sizeof( $repositories ) ) ? "show" : "";?>" aria-labelledby="headingTwo" data-parent="#accordionExample">
+
+				<div class="progress">
+				  	<div id="progressbar"
+				  	     class="progress-bar" 
+				  		 role="progressbar" 
+				  		 style="width: 0%;" 
+				  		 aria-valuenow="0" 
+				  		 aria-valuemin="0" 
+				  		 aria-valuemax="100">0/x</div>
+				</div>
+
+		    	<div class="card-body" id="results" style="display:none">
 		    		
-					<? if( $resultsObj->hasProjects ){ ?>
+					<? if( sizeof( $repositories ) ){ ?>
 
 					<div class="card">
 						<div class="card-body">
@@ -259,19 +184,9 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 							<div class="resultsGraph container-fluid">
 								<div class="row no-gutters justify-content-center">
 									<div class="col-sm-2">
-										<?=
-										drawGraphResult( "User input", 
-														 $resultsObj->getRepositoriesResultCount( "all" ), 
-														 "All repositories", 
-														 "bg-primary col-sm no-list" );
-										?>
+										<span id="graphUserInput"></span>
 										<br />
-										<?=
-										drawGraphResult( "Filter duplicates", 
-														 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
-														 "Duplicated", 
-														 "bg-warning col-sm no-list margin-top" );
-										?>
+										<span id="graphFilterDuplicates"></span>
 									</div>
 									<div class="separator col-sm-auto">
 										<br /><br /><br /><br />====>
@@ -279,21 +194,9 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										<====>
 									</div>
 									<div class="col-sm-2">
-										<?=
-										drawGraphResult( "Unique repositories", 
-														 $resultsObj->getRepositoriesResultCount( "unique" )
-												             - $resultsObj->getRepositoriesResultCount( "ignored" ) , 
-														 "After filters", 
-														 "bg-secondary col-sm no-list" );
-										?>
+										<span id="graphUniqueRepositories"></span>
 										<br />
-										<?=
-										drawGraphResult( "Filter names", 
-														 $resultsObj->getRepositoriesResultCount( "ignored" ), 
-														 implode(", ", $ignoredRepositoriesNames), 
-														 "bg-warning col-sm with-list margin-top",
-														 $resultsObj->getRepositoriesResult( "ignored" ) );
-										?>
+										<span id="graphFilterNames"></span>
 									</div>
 									<div class="separator col-sm-auto">
 										<br /><br /><br /><br />====>
@@ -301,39 +204,16 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
 									<div class="col-sm-2">
-										<?
-										$numRepoToAnalyse = $resultsObj->getRepositoriesResultCount( "unique" )
-												          - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" )
-												          - $resultsObj->getRepositoriesResultCount( "ignored" );
-										echo
-										drawGraphResult( "Repositories to analyse", 
-														 $numRepoToAnalyse, 
-														 "After pre-analyse", 
-														 "bg-secondary col-sm no-list" );
-										?>
+										<span id="graphRepositoriesToAnalyse"></span>
 										<br />
-										<?=
-										drawGraphResult( "Check project pattern", 
-														 $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
-														 "No android gradle detected", 
-														 "bg-warning col-sm with-list margin-top",
-														 $resultsObj->getRepositoriesResult( "withNoProjectDetected" ) );
-										?>
+										<span id="graphCheckProjectPattern"></span>
 									</div>
 									<div class="separator col-sm-auto">
 										<br /><br /><br /><br />====>
 										<br /><br /><br /><br /><br /><br /><br /><br />
 									</div>
 									<div class="col-sm-2">
-										<?
-										$numProjsToAnalyse = $resultsObj->getRepositoriesResultCount( "withChangesDetected" )
-										                   + $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" );
-										echo 
-										drawGraphResult( "Projects to analyse", 
-														 $numProjsToAnalyse, 
-														 "Repositories can have multiple projects", 
-														 "bg-secondary col-sm no-list" );
-										?>
+										<span id="graphProjectsToAnalyse"></span>
 									</div>
 									<div class="separator col-sm-auto">
 										<br /><br /><br /><br />====>
@@ -341,21 +221,9 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
 									<div class="col-sm-2">
-										<?=
-										drawGraphResult( "Final", 
-														 $resultsObj->getRepositoriesResultCount( "withChangesDetected" ), 
-														 "Projects with changes detected", 
-														 "bg-success col-sm with-list",
-														 $resultsObj->getRepositoriesResult( "withChangesDetected" ) );
-										?>
+										<span id="graphFinalWithChanges"></span>
 										<br />
-										<?=
-										drawGraphResult( "Final", 
-														 $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" ), 
-														 "No changes detected", 
-														 "bg-danger col-sm with-list",
-														 $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) );
-										?>
+										<span id="graphFinalWithNoChanges"></span>
 									</div>
 								</div>
 
@@ -363,7 +231,6 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 
 						</div>
 					</div>
-					
 					<br />
 					<div>
 						<div style="float:left; width: 5%;">
@@ -373,37 +240,11 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										<th>API levels</th>
 									</tr>
 								</thead>
-								<tbody>
-									<?php foreach( $resultsObj->getResultsByValue() as $value => $results ){ ?>
-										<tr>
-											<td><?=$value;?></td>
-										</tr>
-									<?php } ?>
-								</tbody>
+								<tbody id="tableResultsByValueLabels"></tbody>
 							</table>
 						</div>
 						<div style="float:right; width: 95%;" class="resultsTableHolder">
-							<table class="resultsTable table">
-								<thead>
-									<tr>
-										<?php foreach( $resultsObj->getResultsByPeriod() as $period => $results ){ ?>
-											<th><?=$period;?></th>
-										<?php } ?>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach( $resultsObj->getResultsByValue() as $value => $results ){ ?>
-										<tr>
-											<? foreach( $results as $result ){ ?>
-												<td class="<?=($result == 0) ? "light" : "";?>"
-													style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
-													<?=$result;?>
-												</td>
-											<? } ?>
-										</tr>
-									<?php } ?>
-								</tbody>
-							</table>
+							<table class="resultsTable table" id="tableResultsByValueValues"></table>
 						</div>
 					</div>
 
@@ -420,37 +261,11 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										<th>API levels</th>
 									</tr>
 								</thead>
-								<tbody>
-									<?php foreach( $resultsObj->getResultsContinuous() as $value => $results ){ ?>
-										<tr>
-											<td><?=$value;?></td>
-										</tr>
-									<?php } ?>
-								</tbody>
+								<tbody id="tableResultsContinuousLabels"></tbody>
 							</table>
 						</div>
 						<div style="float:right; width: 95%;" class="resultsTableHolder">
-							<table class="resultsTable table">
-								<thead>
-									<tr>
-										<?php foreach( $resultsObj->getResultsByPeriod() as $period => $results ){ ?>
-											<th><?=$period;?></th>
-										<?php } ?>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach( $resultsObj->getResultsContinuous() as $value => $results ){ ?>
-										<tr>
-											<? foreach( $results as $result ){ ?>
-												<td class="<?=($result == 0) ? "light" : "";?>"
-													style="background-color:rgb(<?=$resultsObj->getColorForValueContinuous( $result, $resultHeatColors );?>)">
-													<?=$result;?>
-												</td>
-											<? } ?>
-										</tr>
-									<?php } ?>
-								</tbody>
-							</table>
+							<table class="resultsTable table" id="tableResultsContinuousValues"></table>
 						</div>
 					</div>
 

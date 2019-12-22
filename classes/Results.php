@@ -1,17 +1,18 @@
 <?php
-include "classes/Repository.php";
+include_once( "classes/Repository.php" );
+include_once( "classes/Result.php" );
 
 class Results{
 
-	private $resultsByPeriod = array();
-	private $resultsByValue = array();
-	private $resultsContinuous = array();
+	public $resultsByPeriod = array();
+	public $resultsByValue = array();
+	public $resultsContinuous = array();
 	public $hasProjects = false;
 	public $hasResults = false;
-	private $max = 0;
-	private $maxContinuous = 0;
+	public $max = 0;
+	public $maxContinuous = 0;
 
-	private $repoCounts = array(
+	public $repoCounts = array(
 		"all" => 0,
 		"duplicated" => 0,
 		"unique" => 0,
@@ -22,7 +23,8 @@ class Results{
 		"withChangesDetected" => 0,
 	);
 
-	private $repoLists = array(
+	public $repoLists = array(
+		"duplicated" => array(),
 		"ignored" => array(),
 		"withNoProjectDetected" => array(),
 		"withNoChangesDetected" => array(),
@@ -33,64 +35,49 @@ class Results{
 		if( !$repositories || !sizeof( $repositories) ){ return; };
 		$this->hasProjects = true;
 
-		// discard non repeated repositories
+		// discard repeated repositories
 		$this->setNumRepositories( "all", sizeof( $repositories ) );
-		$repositories = array_unique( $repositories );
+		$hashSet = array();
+		foreach( $repositories as $key => $repository ){
+			if( $hashSet[ $repository[ "repositoryString" ] ] ){
+				unset( $repositories[ $key ] );
+				$this->addResult( "duplicated", $repository );
+			}
+			else{
+				$hashSet[ $repository[ "repositoryString" ] ] = true;
+			}
+		}
 		$this->setNumRepositories( "unique", sizeof( $repositories ) );
-		$this->setNumRepositories( "duplicated", $this->repoCounts[ "all" ] - $this->repoCounts[ "unique" ] );
-
 
 		$repos = array();
-		foreach( $repositories as $item ){
-			$parts = explode( ":", $item );
-			$repoEntity = new RepositoryEntity( $parts[ 0 ], $parts[ 1 ], $parts[ 2 ] );
-			$repository = new Repository( $repoEntity, $granularity );
+		foreach( $repositories as $repository ){
+			switch( $repository[ "state" ] ){
+    			case Result::NO_PROJECT_DETECTED:
+    				$this->addResult( "withNoProjectDetected", $repository );
+    				break;
 
-			// make different lists depending on each repository state
-			switch( $repository->state ){
-				case Repository::PROJECT_DETECTED_IN_FOLDER:
-					$projecDetectedInFolder = false;
-	                foreach( $repository->folders as $folder ){
-	                    $innerRepoEntity = clone( $repoEntity );
-	                    $innerRepoEntity->folder = $folder;
-	                    $innerRepository = new Repository( $innerRepoEntity, $granularity );
-	                    if( $innerRepository->state == Repository::PROJECT_DETECTED ){
-	                    	$repos[] = $innerRepository;
-	                    	$projecDetectedInFolder = true;
-	                    }
-	                }
-	                if( !$projecDetectedInFolder ){
-	            		$this->addResult( "withNoProjectDetected", $repository );
-	                }
-	                else{
-	            		$this->incrementNumRepositories( "willTryToDetectChanges" );
-	                }
-	                break;
-
-	            case Repository::IGNORED:
+    			case Result::IGNORED:
 	            	$this->addResult( "ignored", $repository );
-					break;
+    				break;
 
-				case Repository::NO_PROJECT_DETECTED:
-	            	$this->addResult( "withNoProjectDetected", $repository );
-					break;
-
-				default:
-	            	$this->incrementNumRepositories( "willTryToDetectChanges" );
-					$repos[] = $repository;
-					break;
+    			case Result::WILL_TRY_TO_DETECT_CHANGES:
+    				foreach( $repository[ "repositories"] as $innerRepository ){
+    					$repos[] = $innerRepository;
+    				}
+    				break;
 			}
-		}	
+		}
 
 		// determine min and max months
 		$minMonth = date( "Y-m" );
 		$maxMonth = "2006-01";
 		foreach( $repos as $repo ){
-			$repoMinMonth = array_key_first( $repo->propertyChanges );
+			if( !$repo[ "propertyChanges" ] ){ continue; }
+			$repoMinMonth = array_key_first( $repo[ "propertyChanges" ] );
 			$minMonth = $repoMinMonth && $repoMinMonth < $minMonth
 			          ? $repoMinMonth
 			          : $minMonth;
-			$repoMaxMonth = array_key_last( $repo->propertyChanges );
+			$repoMaxMonth = array_key_last( $repo[ "propertyChanges" ] );
 			$maxMonth = $repoMaxMonth && $repoMaxMonth > $maxMonth
 			          ? $repoMaxMonth
 			          : $maxMonth;
@@ -120,7 +107,8 @@ class Results{
 
 		// distribute results into periods
 		foreach( $repos as $repo ){
-			foreach( $repo->propertyChanges as $period => $changes ){
+			if( !$repo[ "propertyChanges" ] ){ continue; }
+			foreach( $repo[ "propertyChanges"] as $period => $changes ){
 				$numItems = sizeof( $changes );
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
@@ -134,7 +122,8 @@ class Results{
 		// results grouped by value
 		$this->resultsByValue = array();
 		foreach( $repos as $repo ){
-			foreach( $repo->propertyChanges as $period => $changes ){
+			if( !$repo[ "propertyChanges" ] ){ continue; }
+			foreach( $repo[ "propertyChanges"] as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
                 	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
@@ -152,7 +141,8 @@ class Results{
 		}
 
 		foreach( $repos as $repo ){
-			foreach( $repo->propertyChangesContinuous as $period => $changes ){
+			if( !$repo[ "propertyChangesContinuous" ] ){ continue; }
+			foreach( $repo[ "propertyChangesContinuous" ] as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
                 	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
@@ -169,9 +159,9 @@ class Results{
 				}
 			}
 
-			$lastPeriod = array_key_last( $repo->propertyChangesContinuous );
-			if( $lastPeriod !== false && is_array( $repo->propertyChangesContinuous[ $lastPeriod ] ) ){
-				foreach( $repo->propertyChangesContinuous[ $lastPeriod ] as $propValue => $change ){
+			$lastPeriod = array_key_last( $repo[ "propertyChangesContinuous" ] );
+			if( $lastPeriod !== false && is_array( $repo[ "propertyChangesContinuous" ][ $lastPeriod ] ) ){
+				foreach( $repo[ "propertyChangesContinuous" ][ $lastPeriod ] as $propValue => $change ){
                 	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 					$this->fillResultsGap( 
 						$this->resultsContinuous, 
@@ -186,7 +176,7 @@ class Results{
 
 		// has results?
 		foreach( $repos as $repo ){
-			if( sizeof( $repo->propertyChanges ) ){
+			if( is_array( $repo[ "propertyChanges" ] ) && sizeof( $repo[ "propertyChanges" ] ) ){
 	            $this->addResult( "withChangesDetected", $repo );
 			}
 			else{
@@ -199,6 +189,10 @@ class Results{
 	    	ksort( $this->resultsByValue );
 			ksort( $this->resultsContinuous );
 		}
+	}
+
+	public function toJson(){
+		return json_encode( $this );
 	}
 
 	private function fillResultsGap( &$target, $propValue, $change, $ini, $end ){
@@ -238,36 +232,6 @@ class Results{
 	private function addResult( $key, $repository ){
 		$this->incrementNumRepositories( $key );
 		$this->repoLists[ $key ][] = $repository;
-	}
-
-	public function getRepositoriesResultCount( $key ){
-		return $this->repoCounts[ $key ];
-	}
-
-	public function getRepositoriesResult( $key ){
-		return $this->repoLists[ $key ];
-	}
-
-	public function getResultsByPeriod(){
-		return $this->resultsByPeriod;
-	}
-
-	public function getResultsByValue(){
-		return $this->resultsByValue;
-	}
-
-	public function getResultsContinuous(){
-		return $this->resultsContinuous;
-	}
-
-	public function getColorForValue( $value, $resultHeatColors ){
-		$index = ceil( $value / $this->max * sizeof( $resultHeatColors ) ) - 1;
-		return( $resultHeatColors[ $index ] );
-	}
-
-	public function getColorForValueContinuous( $value, $resultHeatColors ){
-		$index = ceil( $value / $this->maxContinuous * sizeof( $resultHeatColors ) ) - 1;
-		return( $resultHeatColors[ $index ] );
 	}
 
 	private function getPeriodWithGranularity( $value, $granularity ){
