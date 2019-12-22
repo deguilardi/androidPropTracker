@@ -9,7 +9,7 @@ class Results{
 	public $hasProjects = false;
 	public $hasResults = false;
 	private $max = 0;
-	private $maxContinuous;
+	private $maxContinuous = 0;
 
 	private $repoCounts = array(
 		"all" => 0,
@@ -165,7 +165,7 @@ class Results{
 					}
 
 					$this->resultsContinuous[ $propValue ][ $period ] += $change;
-					$this->calculateMax( $this->resultsContinuous[ $propValue ][ $period ] );
+					$this->calculateMaxContinuous( $this->resultsContinuous[ $propValue ][ $period ] );
 				}
 			}
 
@@ -266,7 +266,7 @@ class Results{
 	}
 
 	public function getColorForValueContinuous( $value, $resultHeatColors ){
-		$index = ceil( $value / $this->maxContinuos * sizeof( $resultHeatColors ) ) - 1;
+		$index = ceil( $value / $this->maxContinuous * sizeof( $resultHeatColors ) ) - 1;
 		return( $resultHeatColors[ $index ] );
 	}
 

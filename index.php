@@ -256,100 +256,109 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 								<dd class="col-sm-10"><?=$granulatity;?></dd>
 							</dl>
 
-							<div class="resultsGraph">
-								<div class="row">
-									<?=
-									drawGraphResult( "User input", 
-													 $resultsObj->getRepositoriesResultCount( "all" ), 
-													 "All repositories", 
-													 "bg-primary col-sm-2" );
-									?>
-									<div class="separator col-sm-1">
-										<br /><br /><br /><br /><br /><br />====>
-										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
+							<div class="resultsGraph container-fluid">
+								<div class="row no-gutters justify-content-center">
+									<div class="col-sm-2">
+										<?=
+										drawGraphResult( "User input", 
+														 $resultsObj->getRepositoriesResultCount( "all" ), 
+														 "All repositories", 
+														 "bg-primary col-sm no-list" );
+										?>
+										<br />
+										<?=
+										drawGraphResult( "Filter duplicates", 
+														 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
+														 "Duplicated", 
+														 "bg-warning col-sm no-list margin-top" );
+										?>
 									</div>
-									<?=
-									drawGraphResult( "Unique repositories", 
-													 $resultsObj->getRepositoriesResultCount( "unique" )
-											             - $resultsObj->getRepositoriesResultCount( "ignored" ) , 
-													 "After filters", 
-													 "bg-secondary col-sm-2" );
-									?>
-									<div class="separator col-sm-1">
-										<br /><br /><br /><br /><br /><br />====>
-										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
-									</div>
-									<?=
-									drawGraphResult( "Repositories to analyse", 
-													 $resultsObj->getRepositoriesResultCount( "unique" )
-											             - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" )
-											             - $resultsObj->getRepositoriesResultCount( "ignored" ), 
-													 "After pre-analyse", 
-													 "bg-secondary col-sm-2" );
-									?>
-									<div class="separator col-sm-1">
-										<br /><br /><br /><br /><br /><br />====>
-										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
-									</div>
-									<?=
-									drawGraphResult( "Final", 
-													 $resultsObj->getRepositoriesResultCount( "withChangesDetected" ), 
-													 "Repositories with changes detected", 
-													 "bg-success col-sm-3",
-													 $resultsObj->getRepositoriesResult( "withChangesDetected" ) );
-									?>
-								</div>
-
-								<div class="row">
-									<div class="col-sm-2"></div>
-									<div class="separator col-sm-1">||<br />||<br />||</div>
-									<div class="col-sm-2"></div>
-									<div class="separator col-sm-1">||<br />||<br />||</div>
-									<div class="col-sm-2"></div>
-									<div class="separator col-sm-1">||<br />||<br />||</div>
-								</div>
-								
-								<div class="row">
-									<?=
-									drawGraphResult( "Filter duplicates", 
-													 $resultsObj->getRepositoriesResultCount( "duplicated" ), 
-													 "Duplicated", 
-													 "bg-warning col-sm-2" );
-									?>
-									<div class="separator col-sm-1">
-										||<br />||<br />||<br />||<br />||<br />
+									<div class="separator col-sm-auto">
+										<br /><br /><br /><br />====>
+										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 										<====>
 									</div>
-									<?=
-									drawGraphResult( "Filter names", 
-													 $resultsObj->getRepositoriesResultCount( "ignored" ), 
-													 implode(", ", $ignoredRepositoriesNames), 
-													 "bg-warning col-sm-2",
-													 $resultsObj->getRepositoriesResult( "ignored" ) );
-									?>
-									<div class="separator col-sm-1">
-										||<br />||<br />||<br />||<br />||<br />
+									<div class="col-sm-2">
+										<?=
+										drawGraphResult( "Unique repositories", 
+														 $resultsObj->getRepositoriesResultCount( "unique" )
+												             - $resultsObj->getRepositoriesResultCount( "ignored" ) , 
+														 "After filters", 
+														 "bg-secondary col-sm no-list" );
+										?>
+										<br />
+										<?=
+										drawGraphResult( "Filter names", 
+														 $resultsObj->getRepositoriesResultCount( "ignored" ), 
+														 implode(", ", $ignoredRepositoriesNames), 
+														 "bg-warning col-sm with-list margin-top",
+														 $resultsObj->getRepositoriesResult( "ignored" ) );
+										?>
+									</div>
+									<div class="separator col-sm-auto">
+										<br /><br /><br /><br />====>
+										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
-									<?=
-									drawGraphResult( "Check project pattern", 
-													 $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
-													 "No android gradle detected", 
-													 "bg-warning col-sm-2",
-													 $resultsObj->getRepositoriesResult( "withNoProjectDetected" ) );
-									?>
-									<div class="separator col-sm-1">
-										||<br />||<br />||<br />||<br />||<br />
+									<div class="col-sm-2">
+										<?
+										$numRepoToAnalyse = $resultsObj->getRepositoriesResultCount( "unique" )
+												          - $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" )
+												          - $resultsObj->getRepositoriesResultCount( "ignored" );
+										echo
+										drawGraphResult( "Repositories to analyse", 
+														 $numRepoToAnalyse, 
+														 "After pre-analyse", 
+														 "bg-secondary col-sm no-list" );
+										?>
+										<br />
+										<?=
+										drawGraphResult( "Check project pattern", 
+														 $resultsObj->getRepositoriesResultCount( "withNoProjectDetected" ), 
+														 "No android gradle detected", 
+														 "bg-warning col-sm with-list margin-top",
+														 $resultsObj->getRepositoriesResult( "withNoProjectDetected" ) );
+										?>
+									</div>
+									<div class="separator col-sm-auto">
+										<br /><br /><br /><br />====>
+										<br /><br /><br /><br /><br /><br /><br /><br />
+									</div>
+									<div class="col-sm-2">
+										<?
+										$numProjsToAnalyse = $resultsObj->getRepositoriesResultCount( "withChangesDetected" )
+										                   + $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" );
+										echo 
+										drawGraphResult( "Projects to analyse", 
+														 $numProjsToAnalyse, 
+														 "Repositories can have multiple projects", 
+														 "bg-secondary col-sm no-list" );
+										?>
+									</div>
+									<div class="separator col-sm-auto">
+										<br /><br /><br /><br />====>
+										<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />||<br />
 										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>
 									</div>
-									<?=
-									drawGraphResult( "Final", 
-													 $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" ), 
-													 "No changes detected", 
-													 "bg-danger col-sm-3",
-													 $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) );
-									?>
+									<div class="col-sm-2">
+										<?=
+										drawGraphResult( "Final", 
+														 $resultsObj->getRepositoriesResultCount( "withChangesDetected" ), 
+														 "Projects with changes detected", 
+														 "bg-success col-sm with-list",
+														 $resultsObj->getRepositoriesResult( "withChangesDetected" ) );
+										?>
+										<br />
+										<?=
+										drawGraphResult( "Final", 
+														 $resultsObj->getRepositoriesResultCount( "withNoChangesDetected" ), 
+														 "No changes detected", 
+														 "bg-danger col-sm with-list",
+														 $resultsObj->getRepositoriesResult( "withNoChangesDetected" ) );
+										?>
+									</div>
 								</div>
+
 							</div>
 
 						</div>
@@ -434,7 +443,7 @@ function drawGraphResult( $header, $resultsCount, $text, $bgClass, $repos = null
 										<tr>
 											<? foreach( $results as $result ){ ?>
 												<td class="<?=($result == 0) ? "light" : "";?>"
-													style="background-color:rgb(<?=$resultsObj->getColorForValue( $result, $resultHeatColors );?>)">
+													style="background-color:rgb(<?=$resultsObj->getColorForValueContinuous( $result, $resultHeatColors );?>)">
 													<?=$result;?>
 												</td>
 											<? } ?>

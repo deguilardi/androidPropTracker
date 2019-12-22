@@ -43,12 +43,25 @@ table.resultsTable tbody td.light{
 .resultsGraph .card-body{
     padding-bottom: 10px;
 }
+.resultsGraph .card-text{
+    height: 4em;
+}
+.resultsGraph .with-list{
+    height: 280px;
+}
+.resultsGraph .no-list{
+    height: 170px;
+}
+.resultsGraph .margin-top{
+    margin-top: 110px
+}
 .resultsGraph ul{
     overflow: auto;
     font-size: 0.5em;
     height: 100px;
     padding: 0 0 0 20px;
     margin: 0 -20px;
+    background: rgba(255,255,255,0.15);
 }
 .resultsGraph ul li{
     text-align: left;
