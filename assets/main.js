@@ -308,9 +308,28 @@ var Results = {
 		});
 
 		//  Apps versions x Time stacked
+		var chartDataContinuousStacked = {
+			labels: chartLabels,
+			datasets: Array()
+		};
+		var i = 0;
+		for( var value in Results.finalResults.resultsContinuous ){
+			var obj = {
+				label: value,
+				borderColor: "rgb(" + resultGraphColors[ i ] + ")",
+				backgroundColor: transparentize( "rgb(" + resultGraphColors[ i ] + ")", 0.2 ),
+				data: Array()
+			};
+			var results = Results.finalResults.resultsContinuous[ value ];
+			for( data in results ){
+				obj.data.push( results[ data ] );
+			}
+			chartDataContinuousStacked.datasets.push( obj );
+			i++;
+		}
 		var chartContinuousStacked = new Chart('chartContinuousStacked', {
 			type: 'line',
-			data: chartDataContinuous,
+			data: chartDataContinuousStacked,
 			options: {
 				title: {
 					display: true,
