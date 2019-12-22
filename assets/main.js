@@ -84,7 +84,7 @@ var Results = {
 				$( "#tableResultsContinuousValues" ),
 				Results.finalResults.resultsContinuous,
 				Results.finalResults.maxContinuous );
-			Results.drawGraphs();
+			Results.drawCharts();
 		});
 	},
 
@@ -221,7 +221,7 @@ var Results = {
 		targetValues.html( values );								
 	},
 
-	drawGraphs : function(){
+	drawCharts : function(){
 
 		// labels
 		var chartLabels = Array();
