@@ -74,7 +74,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 					<form method="post">
 						<hr />
 						<div class="row">
-							<div class="col-sm">
+							<!--<div class="col-sm">
 								<label for="preTestedProjects">Pre tested repositories</label>
 								<select multiple class="form-control" name="projects[]" size="10" id="preTestedProjects">
 									<?php
@@ -87,9 +87,9 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 										</option>
 									<?php } ?>
 								</select>
-							</div>
+							</div>-->
 							<div class="col-sm">
-								<label for="otherProjects">Other repositories</label>
+								<label for="otherProjects">Repositories</label>
 								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/repository:branch:folder ... one repository per line ... no spaces allowed"><?=$otherProjects;?></textarea>
 							</div>
 						</div>
@@ -129,7 +129,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 									</div>
 								</div>
 							</div>
-							<div class="col-sm">
+							<!--<div class="col-sm">
 								<label for="granulatity">Granulatity</label>
 								<div class="form-check">
 								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityMonthly" value="monthly"
@@ -141,7 +141,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 								  		 <?=( $granulatity == "quartely" ? "checked" : "" );?>>
 								  <label class="form-check-label" for="granulatityQuartely">quarterly</label>
 								</div>
-							</div>
+							</div>-->
 						</div>
 						<hr />
 						<button type="submit" class="btn btn-primary">Submit</button>
