@@ -132,6 +132,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 									</div>
 								</div>
 							</div>
+							<input type="hidden" name="granulatity" value="monthly" />
 							<!--<div class="col-sm">
 								<label for="granulatity">Granulatity</label>
 								<div class="form-check">
