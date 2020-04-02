@@ -4,11 +4,10 @@ ini_set( "memory_limit", "1024M" );
 
 include "classes/Results.php";
 
-$repositories = $_POST[ "repositories" ] ? $_POST[ "repositories" ] : array();
-$granulatity = $_POST[ "granulatity" ];
 $propToTrack = $_POST[ "propToTrack" ];
 $rangeMin = $_POST[ "rangeMin" ];
 $rangeMax = $_POST[ "rangeMax" ];
+$granulatity = "monthly";
 
 // extract other repositories field
 $otherProjects = $_POST[ "otherProjects" ];
@@ -16,7 +15,7 @@ $matches = array();
 $regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0,}\:[a-zA-Z0-9\_\.\-]{0,})/";
 preg_match_all( $regexp, $otherProjects, $matches );
 if( sizeof( $matches ) && sizeof( $matches[0] ) ){
-	$repositories = array_merge( $repositories, $matches[ 0 ] );
+	$repositories = $matches[ 0 ];
 }
 ?>
 <html>
@@ -129,19 +128,6 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 									</div>
 								</div>
 							</div>
-							<!--<div class="col-sm">
-								<label for="granulatity">Granulatity</label>
-								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityMonthly" value="monthly"
-								  		 <?=( $granulatity == "monthly" || !$granulatity ? "checked" : "" );?>>
-								  <label class="form-check-label" for="granulatityMonthly">monthly</label>
-								</div>
-								<div class="form-check">
-								  <input class="form-check-input" type="radio" name="granulatity" id="granulatityQuartely" value="quartely"
-								  		 <?=( $granulatity == "quartely" ? "checked" : "" );?>>
-								  <label class="form-check-label" for="granulatityQuartely">quarterly</label>
-								</div>
-							</div>-->
 						</div>
 						<hr />
 						<button type="submit" class="btn btn-primary">Submit</button>
@@ -177,8 +163,6 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 							<dl class="row">
 								<dt class="col-sm-2">Tracking property:</dt>
 								<dd class="col-sm-10"><?=$propToTrack;?></dd>
-								<dt class="col-sm-2">Granulatity:</dt>
-								<dd class="col-sm-10"><?=$granulatity;?></dd>
 							</dl>
 
 							<div class="resultsGraph container-fluid">
