@@ -15,7 +15,7 @@ class RepositoryCache{
     public static function save( $repository ){
         self::initCacheDir();
 		$localFile = self::getFilePath( $repository->repoEntity );
-        $file = fopen( $localFile, "w" ) or die( "Unable to open file!" );
+        $file = fopen( $localFile, "w" ) or die( "Unable to open file! (save)" );
         unset( $repository->rootGradle );
         unset( $repository->modulesGradle );
         $resultsJson = json_encode( $repository );

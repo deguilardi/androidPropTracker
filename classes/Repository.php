@@ -294,7 +294,14 @@ class Repository{
         $htmlDoc->loadHTML( $projectRootFile->content );
         $htmlElem = $htmlDoc->childNodes->item( 1 );
         $bodyElem = $htmlElem->childNodes->item( 3 );
-        $appElem = $bodyElem->childNodes->item( 7 );
+
+        // this element can be in many different positions
+        foreach( $bodyElem->childNodes as $item ){
+            if( $item->nodeType == XML_ELEMENT_NODE && strpos( $item->getAttribute( "class" ), "application-main") !== false ){
+                $appElem = $item;break;
+            }
+        }
+
         $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
 
         // this element can be in many different positions

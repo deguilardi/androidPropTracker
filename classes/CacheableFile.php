@@ -42,7 +42,7 @@ class CacheableFile{
                 // echo "<br> error!";
                 $this->hasError = true;
                 $this->initCacheDir();
-                $file = fopen( CacheableFile::DIR . "/" . $this->localErrorFile, "w" ) or die( "Unable to open file!" );
+                $file = fopen( CacheableFile::DIR . "/" . $this->localErrorFile, "w" ) or die( "Unable to open file! (load)" );
                 fwrite( $file, $this->content );
                 fclose( $file );
             }
@@ -70,7 +70,7 @@ class CacheableFile{
     protected function saveLocal(){
         if( ENABLE_CACHE && $this->content ){
             $this->initCacheDir();
-            $file = fopen( $this->getFullLocalPath(), "w" ) or die( "Unable to open file!" );
+            $file = fopen( $this->getFullLocalPath(), "w" ) or die( "Unable to open file! (saveLocal)" );
             fwrite( $file, $this->content );
             fclose( $file );
         }

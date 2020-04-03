@@ -1,6 +1,9 @@
 <?php
 set_time_limit( 0 );
 ini_set( "memory_limit", "1024M" );
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 include "classes/Results.php";
 
@@ -73,20 +76,6 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 					<form method="post">
 						<hr />
 						<div class="row">
-							<!--<div class="col-sm">
-								<label for="preTestedProjects">Pre tested repositories</label>
-								<select multiple class="form-control" name="projects[]" size="10" id="preTestedProjects">
-									<?php
-									foreach( $reposOptions as $repo ){ 
-										$value = $repo->repo . ":" . $repo->branch . ":" . $repo->folder;
-									?>
-										<option value="<?=$value;?>"
-												<?=( array_search( $value, $repositories ) !== false ? "selected" : "" );?>>
-											<?=$value;?>
-										</option>
-									<?php } ?>
-								</select>
-							</div>-->
 							<div class="col-sm">
 								<label for="otherProjects">Repositories</label>
 								<textarea class="form-control" rows="8" name="otherProjects" id="otherProjects" placeholder="/account/repository:branch:folder ... one repository per line ... no spaces allowed"><?=$otherProjects;?></textarea>
@@ -128,6 +117,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 									</div>
 								</div>
 							</div>
+							<input type="hidden" name="granulatity" value="<?=$granulatity;?>" />
 						</div>
 						<hr />
 						<button type="submit" class="btn btn-primary">Submit</button>
