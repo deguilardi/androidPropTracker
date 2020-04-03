@@ -251,7 +251,12 @@ class Repository{
         if( $fileNavigation ){
             $detailsElem = $fileNavigation->childWithTag( "details" );
             $summaryElem = $detailsElem->childWithTag( "summary" );
-            return $summaryElem->getAttr( "title" );
+            $branchName = $summaryElem->childAt( 3 )->childAt( 0 )->getNode()->wholeText;
+
+            // long branch names have elipsis
+            // example: https://github.com/WycliffeAssociates/translationRecorder
+            $hasElipsis = strpos( $branchName, "…" );
+            return( $hasElipsis ) ? $summaryElem->getAttr( "title" ) : $branchName;
         }
         else{
             return null;
