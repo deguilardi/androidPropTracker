@@ -18,10 +18,13 @@ class GradleFile extends GitFile{
         $this->load();
 
         // some projects have kts suffix
-        if( $this->hasError && $file == "build.gradle" ){
-            $file .= ".kts";
-            parent::__construct( $repoEntity, $file );
-            $this->load();
+        if( $this->hasError ){
+            $match = preg_match( '/build\.gradle$/', $file );
+            if( $match ){
+                $file .= ".kts";
+                parent::__construct( $repoEntity, $file );
+                $this->load();
+            }
         }
 
         if( $isLastVersion ){
@@ -32,6 +35,7 @@ class GradleFile extends GitFile{
     }
 
     public function factoryRootLastVersion( $repoEntity, $file ){
+        // echo "<hr/><hr/><hr/>ROOT<hr/><hr/><hr/>";
         $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
         $gradleFile->_debug( "factory root last version: ". $file, "<hr/>" );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
@@ -39,7 +43,7 @@ class GradleFile extends GitFile{
     }
 
     public function factoryModuleLastVersion( $repoEntity, $file, $parent ){
-        // echo "<hr/><hr/><hr/><hr/><hr/>";
+        // echo "<hr/><hr/><hr/>MODULE<hr/><hr/><hr/>";
         $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
         $gradleFile->_debug( "factory module last version: ". $file );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
