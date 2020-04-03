@@ -84,23 +84,28 @@ class GitFile extends CacheableFile{
     protected function mergeCommits( $otherCommits ){
         if( !$otherCommits ){ return; }
         $output = array();
-        for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
-            for( $ii = 0; $ii < sizeof( $otherCommits ); $ii++ ){
-                if( $this->commits[ $i ]->isAfterThan( $otherCommits[ $ii ] ) ){
-                    $output[] = array_shift( $this->commits );
-                    $i--;
-                    continue 2;
-                }
-                else if( $this->commits[ $i ]->hash == $otherCommits[ $ii ]->hash ){
-                    array_shift( $otherCommits );
-                    $ii--;
-                }
-                else{
-                    $output[] = array_shift( $otherCommits );
-                    $ii--;
+        if( sizeof( $this->commits ) == 0 ){
+            $this->commits = otherCommits;
+        }
+        else{
+            for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
+                for( $ii = 0; $ii < sizeof( $otherCommits ); $ii++ ){
+                    if( $this->commits[ $i ]->isAfterThan( $otherCommits[ $ii ] ) ){
+                        $output[] = array_shift( $this->commits );
+                        $i--;
+                        continue 2;
+                    }
+                    else if( $this->commits[ $i ]->hash == $otherCommits[ $ii ]->hash ){
+                        array_shift( $otherCommits );
+                        $ii--;
+                    }
+                    else{
+                        $output[] = array_shift( $otherCommits );
+                        $ii--;
+                    }
                 }
             }
+            $this->commits = array_merge( $output, $this->commits );
         }
-        $this->commits = array_merge( $output, $this->commits );
     }
 }
