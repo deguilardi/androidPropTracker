@@ -1,7 +1,9 @@
 <?php
-include "GradleFile.php";
-include "RepositoryCache.php";
-include "config.inc";
+include_once( "GradleFile.php" );
+include_once( "RepositoryCache.php" );
+include_once( "config.inc" );
+include_once( "MyDOMDocument.php" );
+include_once( "MyDOMNode.php" );
 
 class Repository{
 
@@ -18,12 +20,11 @@ class Repository{
     public $propertyChangesContinuous = array();
     public $state = Repository::NONE;
     public $folders = array();
-    private $granularity;
+    private $granularity = "monthly";
 
     public function __construct( $repoEntity, $granularity ){
         global $ignoredRepositoriesNames;
         $this->repoEntity = $repoEntity;
-        $this->granularity = $granularity;
 
         // ignore some repositories with some strings in their names
         if( ENABLE_IGNORING_NAMES ){
@@ -51,7 +52,6 @@ class Repository{
                 $this->propertyChangesContinuous = $cache[ "propertyChangesContinuous" ];
                 $this->state = $cache[ "state" ];
                 $this->folders = $cache[ "folders" ];
-                $this->granularity = $cache[ "granularity" ];
                 return;
             }
         }
@@ -247,10 +247,11 @@ class Repository{
     }
 
     private function extractDefaultBranch(){
-        $fileNavigation = $this->getMainProjectGitPageElementWithClass( "file-navigation in-mid-page d-flex flex-items-start" );
+        $fileNavigation = $this->getMainProjectGitPageElementWithClass( "file-navigation" );
         if( $fileNavigation ){
-            return $fileNavigation->childNodes->item( 1 )->childNodes->item( 1 )->childNodes->item( 3 )->childNodes->item( 0 )->wholeText;
-            
+            $detailsElem = $fileNavigation->childWithTag( "details" );
+            $summaryElem = $detailsElem->childWithTag( "summary" );
+            return $summaryElem->getAttr( "title" );
         }
         else{
             return null;
@@ -259,11 +260,18 @@ class Repository{
 
     private function extractFolders(){
         $output = array();
-        $fileWrap = $this->getMainProjectGitPageElementWithClass( "file-wrap" );
+        $fileWrap = $this->getMainProjectGitPageElementWithClass( "Box mb-3" );
         if( $fileWrap ){
-            $tableBody = $fileWrap->childNodes->item( 3 )->childNodes->item( 3 );
+            $includeElem = $fileWrap->childWithTag( "include-fragment" );
+            if( $includeElem ){
+                $tableElem = $includeElem->childWithTag( "table" );
+            }
+            else{
+                $tableElem = $fileWrap->childWithTag( "table" );
+            }
+            $tableBody = $tableElem->childWithTag( "tbody" );
             if( $tableBody ){
-                foreach( $tableBody->childNodes as $item ){
+                foreach( $tableBody->getNode()->childNodes as $item ){
                     if( $item->nodeType != XML_ELEMENT_NODE || $item->getAttribute("class") != "js-navigation-item" ){ continue; }
                     $icon = $item->childNodes->item( 1 )->childNodes->item( 1 );
                     if( $icon->getAttribute( "aria-label" ) != "directory" ){
@@ -289,34 +297,13 @@ class Repository{
             return false;
         }
 
-        $htmlDoc = new DOMDocument();
-        libxml_use_internal_errors( true );
-        $htmlDoc->loadHTML( $projectRootFile->content );
-        $htmlElem = $htmlDoc->childNodes->item( 1 );
-        $bodyElem = $htmlElem->childNodes->item( 3 );
-
-        // this element can be in many different positions
-        foreach( $bodyElem->childNodes as $item ){
-            if( $item->nodeType == XML_ELEMENT_NODE && strpos( $item->getAttribute( "class" ), "application-main") !== false ){
-                $appElem = $item;break;
-            }
-        }
-
-        $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
-
-        // this element can be in many different positions
-        foreach( $mainElem->childNodes as $item ){
-            if( $item->nodeType == XML_ELEMENT_NODE && strpos( $item->getAttribute( "class" ), "container") !== false ){
-                $containerElem = $item;break;
-            }
-        }
-
-        $repoContentElem = $containerElem->childNodes->item( 1 );
-        foreach( $repoContentElem->childNodes as $item ){
-            if( $item->nodeType == XML_ELEMENT_NODE && $item->getAttribute( "class" ) == $class ){
-                break;
-            }
-        }                
-        return $item;
+        $htmlDoc = new MyDOMDocument( $projectRootFile->content );
+        $htmlElem = $htmlDoc->childWithTag( "html" );
+        $bodyElem = $htmlElem->childWithTag( "body" );
+        $appElem = $bodyElem->childWithClass( "application-main" );
+        $mainElem = $appElem->childAt( 1 )->childWithTag( "main" );
+        $containerElem = $mainElem->childWithClass( "container" );
+        $repoContentElem = $containerElem->childWithClass( "repository-content" );
+        return $repoContentElem->childWithClass( $class );
     }
 }

@@ -1,7 +1,9 @@
 <?php
-include "CacheableFile.php";
-include "entities/CommitEntity.php";
-include "entities/RepositoryEntity.php";
+include_once( "CacheableFile.php" );
+include_once( "MyDOMDocument.php" );
+include_once( "MyDOMNode.php" );
+include_once( "entities/CommitEntity.php" );
+include_once( "entities/RepositoryEntity.php" );
 
 class GitFile extends CacheableFile{
 
@@ -29,24 +31,16 @@ class GitFile extends CacheableFile{
             return;
         }
 
-        $htmlDoc = new DOMDocument();
-        libxml_use_internal_errors( true );
-        $htmlDoc->loadHTML( $commitsListFile->content );
-        $htmlElem = $htmlDoc->childNodes->item( 1 );
-        $bodyElem = $htmlElem->childNodes->item( 3 );
+        $htmlDoc = new MyDOMDocument( $commitsListFile->content );
+        $htmlElem = $htmlDoc->childWithTag( "html" );
+        $bodyElem = $htmlElem->childWithTag( "body" );
+        $appElem = $bodyElem->childWithClass( "application-main" );
+        $mainElem = $appElem->childAt( 1 )->childWithTag( "main" );
+        $timelineElem = $mainElem->childWithClass( "new-discussion-timeline" );
+        $repoContentElem = $timelineElem->childWithClass( "repository-content" );
+        $commitsListElem = $repoContentElem->childWithClass( "commits-listing" );
 
-        // this element can be in many different positions
-        foreach( $bodyElem->childNodes as $item ){
-            if( $item->nodeType == XML_ELEMENT_NODE && strpos( $item->getAttribute( "class" ), "application-main") !== false ){
-                $appElem = $item;break;
-            }
-        }
-
-        $mainElem = $appElem->childNodes->item( 1 )->childNodes->item( 1 );
-        $repoContentElem = $mainElem->childNodes->item( 3 )->childNodes->item( 1 );
-        $commitsListElem = $repoContentElem->childNodes->item( 3 );
-
-        foreach( $commitsListElem->childNodes as $item ){
+        foreach( $commitsListElem->getNode()->childNodes as $item ){
             if( $item->nodeType != XML_ELEMENT_NODE ){ continue; }
 
             if( $item->getAttribute( "class" ) == "commit-group-title" ){
@@ -63,10 +57,10 @@ class GitFile extends CacheableFile{
         }
 
         // check for other pages
-        $pagesContainersElem = $repoContentElem->childNodes->item( 5 );
+        $pagesContainersElem = $repoContentElem->childAt( 5 );
         if( $pagesContainersElem ){
-            $nextPageElem = $pagesContainersElem->childNodes->item( 1 )->childNodes->item( 1 );
-            $href = $nextPageElem->getAttribute( "href" );
+            $nextPageElem = $pagesContainersElem->childAt( 1 )->childAt( 1 );
+            $href = $nextPageElem->getNode()->getAttribute( "href" );
             if( $href ){
                 $this->loadCommitsFromPage( $href );
             } 
