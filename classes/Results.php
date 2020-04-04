@@ -39,7 +39,7 @@ class Results{
 		$this->setNumRepositories( "all", sizeof( $repositories ) );
 		$hashSet = array();
 		foreach( $repositories as $key => $repository ){
-			if( $hashSet[ $repository[ "repositoryString" ] ] ){
+			if( array_key_exists( $repository[ "repositoryString" ], $hashSet ) ){
 				unset( $repositories[ $key ] );
 				$this->addResult( "duplicated", $repository );
 			}
@@ -72,7 +72,7 @@ class Results{
 		$minMonth = date( "Y-m" );
 		$maxMonth = "2006-01";
 		foreach( $repos as $repo ){
-			if( !$repo[ "propertyChanges" ] ){ continue; }
+			if( !array_key_exists( "propertyChanges", $repo ) ){ continue; }
 			$repoMinMonth = array_key_first( $repo[ "propertyChanges" ] );
 			$minMonth = $repoMinMonth && $repoMinMonth < $minMonth
 			          ? $repoMinMonth
@@ -107,13 +107,18 @@ class Results{
 
 		// distribute results into periods
 		foreach( $repos as $repo ){
-			if( !$repo[ "propertyChanges" ] ){ continue; }
+			if( !array_key_exists( "propertyChanges", $repo ) ){ continue; }
 			foreach( $repo[ "propertyChanges"] as $period => $changes ){
 				$numItems = sizeof( $changes );
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
-                	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
-					$this->resultsByPeriod[ $period ][ $propValue ] += $change;
+					if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
+					if( array_key_exists( $propValue, $this->resultsByPeriod[ $period ] ) ){
+						$this->resultsByPeriod[ $period ][ $propValue ] += $change;
+					}
+					else{
+						$this->resultsByPeriod[ $period ][ $propValue ] = $change;
+					}
 					$this->calculateMax( $this->resultsByPeriod[ $period ][ $propValue ] );
 				}
 			}
@@ -122,14 +127,14 @@ class Results{
 		// results grouped by value
 		$this->resultsByValue = array();
 		foreach( $repos as $repo ){
-			if( !$repo[ "propertyChanges" ] ){ continue; }
+			if( !array_key_exists( "propertyChanges", $repo ) ){ continue; }
 			foreach( $repo[ "propertyChanges"] as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
                 	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 
 					// initialize with zeroes
-					if( !$this->resultsByValue[ $propValue ] ){
+					if( !array_key_exists( $propValue, $this->resultsByValue ) ){
 						foreach( $this->resultsByPeriod as $key2 => $result ){
 							$this->resultsByValue[ $propValue ][ $key2 ] = 0;
 						}
@@ -141,14 +146,14 @@ class Results{
 		}
 
 		foreach( $repos as $repo ){
-			if( !$repo[ "propertyChangesContinuous" ] ){ continue; }
+			if( !array_key_exists( "propertyChangesContinuous", $repo ) ){ continue; }
 			foreach( $repo[ "propertyChangesContinuous" ] as $period => $changes ){
 				foreach( $changes as $propValue => $change ){
 					if( $propValue == GradleFile::NOT_LOADED ){ continue; }
                 	if( $propValue < RANGE_MIN || $propValue > RANGE_MAX ){ continue; }
 
 					// initialize with zeroes
-					if( !$this->resultsContinuous[ $propValue ] ){
+					if( !array_key_exists( $propValue, $this->resultsContinuous ) ){
 						foreach( $this->resultsByPeriod as $key2 => $result ){
 							$this->resultsContinuous[ $propValue ][ $key2 ] = 0;
 						}
@@ -176,7 +181,7 @@ class Results{
 
 		// has results?
 		foreach( $repos as $repo ){
-			if( is_array( $repo[ "propertyChanges" ] ) && sizeof( $repo[ "propertyChanges" ] ) ){
+			if( array_key_exists( "propertyChanges", $repo ) && is_array( $repo[ "propertyChanges" ] ) && sizeof( $repo[ "propertyChanges" ] ) ){
 	            $this->addResult( "withChangesDetected", $repo );
 			}
 			else{
@@ -217,7 +222,7 @@ class Results{
             $year++;
         }
         $key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
-        $key = $this->getPeriodWithGranularity( $key, $granularity );
+        $key = $this->getPeriodWithGranularity( $key, "monthly" );
         return $key;
     }
 

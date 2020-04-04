@@ -36,7 +36,7 @@ class GradleFile extends GitFile{
 
     public function factoryRootLastVersion( $repoEntity, $file ){
         // echo "<hr/><hr/><hr/>ROOT<hr/><hr/><hr/>";
-        $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
+        $gradleFile = new GradleFile( $repoEntity, $file, null, true );
         $gradleFile->_debug( "factory root last version: ". $file, "<hr/>" );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
         return $gradleFile;
@@ -133,7 +133,7 @@ class GradleFile extends GitFile{
             preg_match_all( $regexp, $sectionContent, $matches, PREG_OFFSET_CAPTURE );
             foreach( $matches[ 1 ] as $k => $var ){
                 $varName = $var[ 0 ];
-                if( !$this->extVars[ $varName ] ){
+                if( !array_key_exists( $varName, $this->extVars ) ){
                     $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
                 }
             }
@@ -161,9 +161,11 @@ class GradleFile extends GitFile{
                     foreach( $propertiesList as $property ){
                         $parts = explode( ":", $property );
                         $varName = $varPrefix . "." . $parts[ 0 ];
-                        $varValue = $parts[ 1 ];
-                        if( $varName && $varValue ){
-                            $this->extVars[ $varName ] = new ExtVarEntity( $varName, $varValue );
+                        if( array_key_exists( 1, $parts ) ){
+                            $varValue = $parts[ 1 ];
+                            if( $varName && $varValue ){
+                                $this->extVars[ $varName ] = new ExtVarEntity( $varName, $varValue );
+                            }
                         }
                     }
                 }
@@ -260,9 +262,15 @@ class GradleFile extends GitFile{
                 }
             }
 
-            $output = $this->parent->extVars[ $varValueName ]->value;
-            $this->_debug( "    output in parent ext var: " . $output );
-            $output = ( is_numeric( $output ) ) ? $output : $this->parent->extVars[ $output ]->value;
+            if( $this->parent ){
+                $output = $this->parent->extVars[ $varValueName ]->value;
+                $this->_debug( "    output in parent ext var: " . $output );
+            }
+            $output = ( isset( $output ) && is_numeric( $output ) ) 
+                   ? $output
+                   : $this->parent
+                       ? $this->parent->extVars[ $output ]->value
+                       : null;
             $this->_debug( "    final output: " . $output );
             return ( $output ) ? $output : self::NOT_LOADED;
         }
