@@ -7,13 +7,13 @@ ini_set( "memory_limit", "1024M" );
 
 include "classes/Results.php";
 
-$propToTrack = $_POST[ "propToTrack" ];
-$rangeMin = $_POST[ "rangeMin" ];
-$rangeMax = $_POST[ "rangeMax" ];
+$propToTrack = array_key_exists( "propToTrack", $_POST ) ? $_POST[ "propToTrack" ] : null;
+$rangeMin = array_key_exists( "rangeMin", $_POST ) ? $_POST[ "rangeMin" ] : null;
+$rangeMax = array_key_exists( "rangeMax", $_POST ) ? $_POST[ "rangeMax" ] : null;
 $granulatity = "monthly";
 
 // extract other repositories field
-$otherProjects = $_POST[ "otherProjects" ];
+$otherProjects = array_key_exists( "otherProjects", $_POST ) ? $_POST[ "otherProjects" ] : null;
 $matches = array();
 $regexp = "/(\/[a-zA-Z0-9\_\.\-]{1,}\/[a-zA-Z0-9\_\.\-]{1,}\:[a-zA-Z0-9\_\.\-]{0,}\:[a-zA-Z0-9\_\.\-]{0,})/";
 preg_match_all( $regexp, $otherProjects, $matches );
@@ -50,7 +50,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 
 	$( document ).ready(function(){
 		<?php
-		if( sizeof( $repositories ) ){
+		if( isset( $repositories ) && sizeof( $repositories ) ){
 			echo "Results.init( ".sizeof( $repositories ).", \"".$granulatity."\", ".$rangeMin.", ".$rangeMax." );";
 			foreach( $repositories as $repository ){ ?>
 				Results.inspectRepository( "<?=$repository;?>", "<?=$propToTrack;?>" );
@@ -70,7 +70,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 					<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Form</button>
 				</h2>
 			</div>
-			<div id="collapseOne" class="collapse <?=( sizeof( $repositories ) ) ? "" : "show";?>" aria-labelledby="headingOne" data-parent="#accordionExample">
+			<div id="collapseOne" class="collapse <?=( isset( $repositories ) && sizeof( $repositories ) ) ? "" : "show";?>" aria-labelledby="headingOne" data-parent="#accordionExample">
 				<div class="card-body">
 
 					<form method="post">
@@ -129,10 +129,10 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 	  	<div class="card">
 		    <div class="card-header" id="headingTwo">
 			    <h2 class="mb-0">
-			        <button class="btn btn-link collapsed <?=( sizeof( $repositories ) ) ? "" : "disabled";?>" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Results</button>
+			        <button class="btn btn-link collapsed <?=( isset( $repositories ) && sizeof( $repositories ) ) ? "" : "disabled";?>" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Results</button>
 			    </h2>
 		    </div>
-		    <div id="collapseTwo" class="collapse <?=( sizeof( $repositories ) ) ? "show" : "";?>" aria-labelledby="headingTwo" data-parent="#accordionExample">
+		    <div id="collapseTwo" class="collapse <?=( isset( $repositories ) && sizeof( $repositories ) ) ? "show" : "";?>" aria-labelledby="headingTwo" data-parent="#accordionExample">
 
 				<div class="progress">
 				  	<div id="progressbar"
@@ -146,7 +146,7 @@ if( sizeof( $matches ) && sizeof( $matches[0] ) ){
 
 		    	<div class="card-body" id="results" style="display:none">
 		    		
-					<? if( sizeof( $repositories ) ){ ?>
+					<? if( isset( $repositories ) && sizeof( $repositories ) ){ ?>
 
 					<div class="card">
 						<div class="card-body">

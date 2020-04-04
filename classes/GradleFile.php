@@ -47,9 +47,11 @@ class GradleFile extends GitFile{
         $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
         $gradleFile->_debug( "factory module last version: ". $file );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
-        $gradleFile->_debug( "parent remote file: " . $parent->remoteFile );
         $gradleFile->_debug( "number of commits before merge: " . sizeof( $gradleFile->commits ) );
-        $gradleFile->mergeCommits( $parent->commits );
+        if( $parent ){
+            $gradleFile->_debug( "parent remote file: " . $parent->remoteFile );
+            $gradleFile->mergeCommits( $parent->commits );
+        }
         $gradleFile->_debug( "number of commits after merge: " . sizeof( $gradleFile->commits ) );
         $gradleFile->extractPropertyChangeHistory( $gradleFile, 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         return $gradleFile;
@@ -262,21 +264,22 @@ class GradleFile extends GitFile{
                 }
             }
 
-            if( $this->parent ){
+            if( $this->parent && array_key_exists( $varValueName, $this->parent->extVars ) ){
                 $output = $this->parent->extVars[ $varValueName ]->value;
                 $this->_debug( "    output in parent ext var: " . $output );
+                if( isset( $output ) ){
+                    $output = ( is_numeric( $output ) || ((int) $output) != 0 )
+                           ? $output
+                           : ( $this->parent && isset( $this->parent->extVars[ $output ] )
+                               ? $this->parent->extVars[ $output ]->value
+                               : null );
+                    $this->_debug( "    final output: " . $output );
+                    return ( $output ) ? $output : self::NOT_LOADED;
+                }
             }
-            $output = ( isset( $output ) && is_numeric( $output ) ) 
-                   ? $output
-                   : $this->parent
-                       ? $this->parent->extVars[ $output ]->value
-                       : null;
-            $this->_debug( "    final output: " . $output );
-            return ( $output ) ? $output : self::NOT_LOADED;
         }
-        else{
-            return self::NOT_LOADED;
-        }
+        $this->_debug( "    final output: NULL");
+        return self::NOT_LOADED;
     }
 
     private function extractPropertyChangeHistory( $baseGradleFile, $leftIndex, $rightIndex ){

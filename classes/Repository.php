@@ -106,7 +106,15 @@ class Repository{
                 $prevValue = null;
                 foreach( $moduleGradle->propertyHistory as $targetSdkVersionChange ){
                     $key = $targetSdkVersionChange->getFormatedDate( $this->granularity );
-                    $this->propertyChanges[ $key ][ $targetSdkVersionChange->newValue ]++;
+                    if( !array_key_exists( $key, $this->propertyChanges ) ){
+                        $this->propertyChanges[ $key ] = array();
+                    }
+                    if( array_key_exists( $targetSdkVersionChange->newValue, $this->propertyChanges[ $key ] ) ){
+                        $this->propertyChanges[ $key ][ $targetSdkVersionChange->newValue ]++;
+                    }
+                    else{
+                        $this->propertyChanges[ $key ][ $targetSdkVersionChange->newValue ] = 1;
+                    }
                     if( !$prevKey ){
                         $finalValues[] = $targetSdkVersionChange;
                     }
@@ -138,7 +146,15 @@ class Repository{
             foreach( $finalValues as $finalValue ){
                 $period = $finalValue->getFormatedDate( $this->granularity );
                 $this->fillResultsGap( $this->propertyChangesContinuous, $finalValue->newValue, $period, $lastPeriod );
-                $this->propertyChangesContinuous[ $lastPeriod ][ $finalValue->newValue ]++;
+                if( !array_key_exists( $lastPeriod, $this->propertyChangesContinuous ) ){
+                    $this->propertyChangesContinuous[ $lastPeriod ] = array();
+                }
+                if( array_key_exists( $finalValue->newValue, $this->propertyChangesContinuous[ $lastPeriod ] ) ){
+                    $this->propertyChangesContinuous[ $lastPeriod ][ $finalValue->newValue ]++;
+                }
+                else{
+                    $this->propertyChangesContinuous[ $lastPeriod ][ $finalValue->newValue ] = 1;
+                }
             }
         }
         else{
@@ -150,7 +166,15 @@ class Repository{
         $key = $ini;
         $i = 0;
         while( $key != $end && $i < 100 ){
-            $target[ $key ][ $propValue ]++;
+            if( !array_key_exists( $key, $target ) ){
+                $target[ $key ] = array();
+            }
+            if( array_key_exists( $propValue, $target[ $key ] ) ){
+                $target[ $key ][ $propValue ]++;
+            }
+            else{
+                $target[ $key ][ $propValue ] = 1;
+            }
             $key = $this->incrementPeriod( $key );
             $i++;
         }
@@ -165,7 +189,7 @@ class Repository{
             $year++;
         }
         $key = $year . "-" . str_pad( $month, 2, '0', STR_PAD_LEFT );
-        $key = $this->getPeriodWithGranularity( $key, $granularity );
+        $key = $this->getPeriodWithGranularity( $key, "monthly" );
         return $key;
     }
 
