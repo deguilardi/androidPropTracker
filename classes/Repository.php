@@ -44,7 +44,7 @@ class Repository{
         $this->rootGradle = GradleFile::factoryRootLastVersion( $this->repoEntity, "build.gradle", null );
 
         // load cache
-        if( ENABLE_CACHE_RESULTS ){
+        if( ENABLE_CACHE && ENABLE_CACHE_RESULTS ){
             $cache = RepositoryCache::factoryResultsWithRepoEntity( $this->repoEntity );
             if( $cache ){
                 $this->repoEntity = new RepositoryEntity( $cache[ "repoEntity" ][ "repo" ], $cache[ "repoEntity" ][ "branch" ], $cache[ "repoEntity" ][ "folder" ], );
@@ -307,10 +307,9 @@ class Repository{
                         continue;
                     }
 
-                    $contentElem = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 );
-                    if( $contentElem->nodeType == XML_TEXT_NODE ){
-                        $output[] = $contentElem->wholeText;
-                    }
+                    $contentElem = $item->childNodes->item( 3 )->childNodes->item( 1 );
+                    $linkElem = $contentElem->childNodes->item( 0 );
+                    $output[] = $linkElem->nodeValue;
                 }
             }
         }
