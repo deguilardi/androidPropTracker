@@ -85,7 +85,7 @@ class GitFile extends CacheableFile{
         if( !$otherCommits ){ return; }
         $output = array();
         if( sizeof( $this->commits ) == 0 ){
-            $this->commits = otherCommits;
+            $this->commits = $otherCommits;
         }
         else{
             for( $i = 0; $i < sizeof( $this->commits ); $i++ ){
