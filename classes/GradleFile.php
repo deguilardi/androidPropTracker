@@ -142,7 +142,10 @@ class GradleFile extends GitFile{
             foreach( $matches[ 1 ] as $k => $var ){
                 $varName = $var[ 0 ];
                 if( !array_key_exists( $varName, $this->extVars ) ){
-                    $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ][ 0 ] );
+                    $varValue = $matches[ 3 ][ $k ][ 0 ];
+                    // some vars have "as int"
+                    $varValue = str_replace( "asint", "", $varValue );
+                    $this->extVars[ $varName ] = new ExtVarEntity( $varName, $varValue );
                 }
             }
         }
@@ -188,7 +191,10 @@ class GradleFile extends GitFile{
             foreach( $matches[ 1 ] as $k => $varName ){
                 if( strpos( $varName, "ext." ) === 0 ){
                     $varName2 = str_replace( "ext.", "", $varName );
-                    $this->extVars[ $varName2 ] = new ExtVarEntity( $varName2, $matches[ 3 ][ $k ] );
+                    $varValue = $matches[ 3 ][ $k ];
+                    // some vars have "as int"
+                    $varValue = str_replace( "asint", "", $varValue );
+                    $this->extVars[ $varName2 ] = new ExtVarEntity( $varName2, $varValue );
                 }
                 $this->extVars[ $varName ] = new ExtVarEntity( $varName, $matches[ 3 ][ $k ] );
             }
