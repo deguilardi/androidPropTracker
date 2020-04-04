@@ -32,7 +32,13 @@ class CacheableFile{
         else{
             if( is_file( CacheableFile::DIR . "/" . $this->localErrorFile ) ){
                 // echo "<br>cached error";
-                $this->hasError = true;
+                if( ENABLE_CACHE_ERRORS ){
+                    $this->hasError = true;
+                }
+                else{
+                    unlink( CacheableFile::DIR . "/" . $this->localErrorFile );
+                    $this->load();
+                }
             }
             else if( $this->loadRemote() ){
                 $this->loaded = true;

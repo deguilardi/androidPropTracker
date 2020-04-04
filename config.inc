@@ -4,6 +4,7 @@ define( 'GIT_RAW_CODE_URL_BASE', 'https://raw.githubusercontent.com' );
 define( 'GIT_BRANCH_DEFAULT', 'master' );
 define( 'ENABLE_CACHE', true );
 define( 'ENABLE_CACHE_RESULTS', true );
+define( 'ENABLE_CACHE_ERRORS', true );
 define( 'ENABLE_IGNORING_NAMES', true );
 define( 'DEBUG_GRADLE_FILE', false );
 define( 'DEBUG_GRADLE_FILE_REMOTE_ADDR', null ); // ex: https://raw.githubusercontent.com/tateisu/SubwayTooter/master/app/build.gradle"
