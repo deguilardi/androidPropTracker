@@ -1,5 +1,9 @@
 <?php
 set_time_limit( 0 );
+
+// prevent osx to miss some info
+usleep( 100 );
+
 chdir( "../" );
 
 include "classes/Result.php";
