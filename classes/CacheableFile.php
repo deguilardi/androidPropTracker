@@ -32,7 +32,7 @@ class CacheableFile{
         else{
             if( is_file( CacheableFile::DIR . "/" . $this->localErrorFile ) ){
                 // echo "<br>cached error";
-                if( ENABLE_CACHE_ERRORS ){
+                if( ENABLE_CACHE && ENABLE_CACHE_ERRORS ){
                     $this->hasError = true;
                 }
                 else{
@@ -83,10 +83,12 @@ class CacheableFile{
     }
 
     private function loadRemote(){
+        $remoteFile = $this->remoteFile;
+        $remoteFile = str_replace( " ", "%20", $remoteFile );
         // echo "<br><br/>" . "loading remote file:";
-        // echo "<br>" . $this->remoteFile;
+        // echo "<br>" . $remoteFile;
         // echo "<br>" . $this->localFile;
-        $this->content = @file_get_contents( $this->remoteFile );
+        $this->content = @file_get_contents( $remoteFile );
         return ( $this->content ) ? true : false;
     }
 

@@ -35,15 +35,21 @@ class GradleFile extends GitFile{
     }
 
     public function factoryRootLastVersion( $repoEntity, $file ){
-        // echo "<hr/><hr/><hr/>ROOT<hr/><hr/><hr/>";
+        if( DEBUG_GRADLE_FILE && !DEBUG_GRADLE_FILE_REMOTE_ADDR ){
+            echo "<hr/><hr/><hr/>ROOT<hr/><hr/><hr/>";
+        }
         $gradleFile = new GradleFile( $repoEntity, $file, null, true );
         $gradleFile->_debug( "factory root last version: ". $file, "<hr/>" );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
+        $gradleFile->_debug( "number of commits: " . sizeof( $gradleFile->commits ) );
+        $gradleFile->extractPropertyChangeHistory( $gradleFile, 0, sizeof( $gradleFile->commits ) - 1, $gradleFile );
         return $gradleFile;
     }
 
     public function factoryModuleLastVersion( $repoEntity, $file, $parent ){
-        // echo "<hr/><hr/><hr/>MODULE<hr/><hr/><hr/>";
+        if( DEBUG_GRADLE_FILE && !DEBUG_GRADLE_FILE_REMOTE_ADDR ){
+            echo "<hr/><hr/><hr/>MODULE<hr/><hr/><hr/>";
+        }
         $gradleFile = new GradleFile( $repoEntity, $file, $parent, true );
         $gradleFile->_debug( "factory module last version: ". $file );
         $gradleFile->_debug( "remote file: " . $gradleFile->remoteFile );
