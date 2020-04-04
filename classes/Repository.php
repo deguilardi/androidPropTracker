@@ -307,9 +307,9 @@ class Repository{
                         continue;
                     }
 
-                    $content = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 )->wholeText;
-                    if( $content ){
-                        $output[] = $content;
+                    $contentElem = $item->childNodes->item( 3 )->childNodes->item( 1 )->childNodes->item( 0 )->childNodes->item( 0 );
+                    if( $contentElem->nodeType == XML_TEXT_NODE ){
+                        $output[] = $contentElem->wholeText;
                     }
                 }
             }
